@@ -1,2 +1,2 @@
-package player;public class HumanPlayer {
+package player;public class Human_Player {
 }

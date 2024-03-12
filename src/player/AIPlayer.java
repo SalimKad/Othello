@@ -1,2 +1,4 @@
-package player;public class AIPlayer {
+package player;
+
+public class AIPlayer {
 }
