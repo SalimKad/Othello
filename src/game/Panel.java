@@ -49,7 +49,7 @@ public class Panel extends JPanel implements BoardInterface {
         JPanel othelloBoard = new JPanel();
         othelloBoard.setLayout(new GridLayout(8,8));
         othelloBoard.setBackground(new Color(7,50,18));
-        othelloBoard.setSize(new Dimension(600,600)); //taille de la fenêtre
+        othelloBoard.setSize(new Dimension(800,800)); //taille de la fenêtre
 
         //init board
         resetBoard();
@@ -102,7 +102,10 @@ public class Panel extends JPanel implements BoardInterface {
         this.add(rightbar,BorderLayout.EAST);
         this.add(othelloBoard);
 
-
+        //updateBoardInfo()
+        //updateTotalScore()
+        //time
+        //turn
     }
 
     public void resetBoard(){
@@ -112,12 +115,15 @@ public class Panel extends JPanel implements BoardInterface {
                 board[i][j]=0;
             }
         }
-        //initial board state
+        //retour à la grille initiale
         setBoardValue(3,3,2); //blanc
         setBoardValue(4,4,2);
         setBoardValue(3,4,1); //noir
         setBoardValue(4,3,1);
 
     }
+
+    //manage turn
+    //total score
 
 }

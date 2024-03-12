@@ -53,7 +53,7 @@ public class Cell extends JLabel implements MouseListener {
 
     @Override
     public void mousePressed(MouseEvent e) {
-
+        boardInterface.handleClick(i,j);
     }
 
     @Override
