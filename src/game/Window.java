@@ -13,8 +13,7 @@ public class Window extends JFrame {
         this.setSize(600,400);
         //this.pack(); //définir taille composants
         // Close operation
-        this.setDefaultCloseOperation(
-                JFrame.EXIT_ON_CLOSE);
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         // Make the frame visible
         this.setVisible(true);
     }
