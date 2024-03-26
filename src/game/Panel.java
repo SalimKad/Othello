@@ -48,8 +48,9 @@ public class Panel extends JPanel implements BoardInterface {
         if(awaitForClick && GameLogic.canPlay(board,turn,i,j)){
             System.out.println("User Played in : "+ i + " , " + j);
             board = GameLogic.getNewBoardAfterMove(board,i,j,turn);
-            updateBoardInfo();
             repaint();
+            updateBoardInfo();
+
             turn = (turn == 1) ? 2 : 1;
 
             //awaitForClick = false;
@@ -67,9 +68,7 @@ public class Panel extends JPanel implements BoardInterface {
         othelloBoard.setBackground(boardColor);
         othelloBoard.setSize(new Dimension(800,800)); //taille de la fenêtre
 
-        //init board
         resetBoard();
-
         cells = new Cell[8][8];
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
