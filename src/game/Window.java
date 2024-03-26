@@ -10,7 +10,7 @@ public class Window extends JFrame {
         Panel panel = new Panel();
         this.add(panel);
         this.setTitle("Jeu d'Othello");
-        this.setSize(600,400);
+        this.setSize(800,600);
         //this.pack(); //définir taille composants
         // Close operation
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
