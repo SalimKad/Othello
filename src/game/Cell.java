@@ -10,8 +10,11 @@ import java.awt.event.MouseListener;
 public class Cell extends JLabel implements MouseListener {
 
     int i, j; //ligne & colonne
+    public int highlight;
     JPanel grid; //grille
     BoardInterface boardInterface; //interface de la grille
+
+    Color highlightColor = new Color(190,215,62);
 
     public Cell(BoardInterface boardInterface, JPanel grid, int i, int j) {
         this.boardInterface = boardInterface;
@@ -42,6 +45,21 @@ public class Cell extends JLabel implements MouseListener {
             g.fillOval(margin_left,margin_top,this.getWidth()-2*margin_left,this.getHeight()-2*margin_top);
         }
 
+        if(highlight == 1) {
+            g.setColor(highlightColor);
+            g.fillOval(0,0,this.getWidth(),this.getHeight());
+            g.setColor(grid.getBackground());
+            g.fillOval(4,4,this.getWidth()-8,this.getHeight()-8);
+        }else if(highlight == 2){
+            g.setColor(highlightColor);
+            g.fillOval(0,0,this.getWidth(),this.getHeight());
+            g.setColor(grid.getBackground());
+            g.fillOval(4,4,this.getWidth()-8,this.getHeight()-8);
+        }else if(highlight == 10){
+            g.setColor(highlightColor);
+            g.fillOval(0,0,this.getWidth(),this.getHeight());
+        }
+
         super.paintComponent(g);
 
     }
@@ -54,6 +72,7 @@ public class Cell extends JLabel implements MouseListener {
     @Override
     public void mousePressed(MouseEvent e) {
         boardInterface.handleClick(i,j);
+        repaint();
     }
 
     @Override
