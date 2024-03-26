@@ -3,6 +3,7 @@ package game;
 import javax.swing.*;
 import javax.swing.border.*;
 import java.awt.*;
+import java.util.ArrayList;
 
 //game panel
 //tous les composants de la fenêtre
@@ -49,9 +50,9 @@ public class Panel extends JPanel implements BoardInterface {
             System.out.println("User Played in : "+ i + " , " + j);
             board = GameLogic.getNewBoardAfterMove(board,i,j,turn);
             repaint();
-            updateBoardInfo();
 
             turn = (turn == 1) ? 2 : 1;
+            updateBoardInfo();
 
             //awaitForClick = false;
 
@@ -148,16 +149,30 @@ public class Panel extends JPanel implements BoardInterface {
         int p1score = 0;
         int p2score = 0;
 
+        ArrayList<Point> possibleMoves = new ArrayList<>();
+        possibleMoves = GameLogic.getAllPossibleMoves(board, turn);
+
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
-                if(board[i][j] == 1) p1score++;
-                if(board[i][j] == 2) p2score++;
+                if (board[i][j] == 1) p1score++;
+                if (board[i][j] == 2) p2score++;
 
-                if(GameLogic.canPlay(board,turn,i,j)){
+                Point point = new Point(i,j);
+                if(possibleMoves.contains(point)) {
                     cells[i][j].highlight = 1;
-                }else{
+                }
+                else {
                     cells[i][j].highlight = 0;
                 }
+                /*
+                // Vérifie si le mouvement est possible pour le joueur dont c'est le tour
+                if (turn == 1 && GameLogic.canPlay(board, 1, i, j)) {
+                    cells[i][j].highlight = 1;
+                } else if (turn == 2 && GameLogic.canPlay(board, 2, i, j)) {
+                    cells[i][j].highlight = 1;
+                } else {
+                    cells[i][j].highlight = 0;
+                }*/
             }
         }
 
