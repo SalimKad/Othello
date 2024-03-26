@@ -251,11 +251,13 @@ public class GameLogic {
 
      */
 
+    /*
     public static int[][] updateCaseColor(int[][] board, int x, int y, int player) {
         int[][] newboard = new int[8][8];
         for (int i = 0; i < 8; i++) {
             System.arraycopy(board[i], 0, newboard[i], 0, 8);
         }
+        newboard[x][y] = player;
 
         // Changer la couleur des pions encadrés
         // Vérifier les lignes horizontales
@@ -298,23 +300,96 @@ public class GameLogic {
             }
         }
 
-        // Mettre à jour la nouvelle position du pion joué
+        return newboard;
+    } */
+
+    public static int[][] updateCaseColor(int[][] board, int x, int y, int player) {
+        int[][] newboard = new int[8][8];
+        // Copier le plateau existant dans le nouveau plateau
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                newboard[i][j] = board[i][j];
+            }
+        }
+        // Placer le nouveau pion sur le plateau
         newboard[x][y] = player;
+
+        // Changer la couleur des pions encadrés par deux pions adverses
+        int opponent = (player == 1) ? 2 : 1; // Déterminer la couleur de l'adversaire
+        // Pour chaque direction possible (horizontale, verticale, diagonale)
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dy = -1; dy <= 1; dy++) {
+                if (dx == 0 && dy == 0) continue; // Ignorer la position actuelle du pion
+                int i = x + dx;
+                int j = y + dy;
+                // Tant que nous sommes dans les limites du plateau et que nous rencontrons des pions adverses
+                while (i >= 0 && i < 8 && j >= 0 && j < 8 && board[i][j] == opponent) {
+                    i += dx; // Avancer dans la même direction
+                    j += dy;
+                }
+                // Si nous avons trouvé une ligne de pions adverses encadrés par les nôtres
+                if (i >= 0 && i < 8 && j >= 0 && j < 8 && board[i][j] == player) {
+                    // Retourner les pions adverses entre les deux pions du joueur actuel
+                    int flipI = x + dx;
+                    int flipJ = y + dy;
+                    while (flipI != i || flipJ != j) {
+                        newboard[flipI][flipJ] = player;
+                        flipI += dx;
+                        flipJ += dy;
+                    }
+                }
+            }
+        }
 
         return newboard;
     }
 
+    public static boolean isMoveValid(int[][] board, int x, int y, int player) {
+        if (board[x][y] != 0) {
+            // La case est déjà occupée
+            return false;
+        }
 
-    public static int[][] getNewBoardAfterMove(int[][] board, int x, int y, int playerColor){
-        int[][] midboard = new int[8][8];
-        for (int i = 0; i < 8; i++) {
-            for (int j = 0; j < 8; j++) {
-                midboard[i][j] = board[i][j];
+        int opponent = (player == 1) ? 2 : 1;
+
+        // Vérifier dans toutes les directions si le mouvement capture des pions adverses
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dy = -1; dy <= 1; dy++) {
+                if (dx == 0 && dy == 0) continue; // Ignorer la position actuelle du pion
+                int i = x + dx;
+                int j = y + dy;
+                boolean foundOpponent = false;
+                // Tant que nous sommes dans les limites du plateau et que nous rencontrons des pions adverses
+                while (i >= 0 && i < 8 && j >= 0 && j < 8 && board[i][j] == opponent) {
+                    i += dx; // Avancer dans la même direction
+                    j += dy;
+                    foundOpponent = true;
+                }
+                // Si nous avons trouvé une ligne de pions adverses encadrés par les nôtres
+                if (i >= 0 && i < 8 && j >= 0 && j < 8 && board[i][j] == player && foundOpponent) {
+                    return true;
+                }
             }
         }
 
-        int [][] newboard = new int[8][8];
-        newboard = updateCaseColor(midboard, x, y, playerColor);
+        return false;
+    }
+
+
+
+    public static int[][] getNewBoardAfterMove(int[][] board, int x, int y, int playerColor){
+        int[][] newboard = new int[8][8];
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                newboard[i][j] = board[i][j];
+            }
+        }
+        if(isMoveValid(board,x,y,playerColor)) {
+            newboard = updateCaseColor(newboard, x, y, playerColor);
+        }
+        else {
+            System.out.println("Invalid move");
+        }
 
         return newboard;
     }
