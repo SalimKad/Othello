@@ -154,24 +154,107 @@ public class GameLogic {
         return getAllPossibleMoves(board,player).size() > 0;
     }
 
+    public static int[][] updateCaseColor(int[][] board, int x, int y, int player) {
+        // mettre à jour le highlight également
 
-    public static int[][] getNewBoardAfterMove(int[][] board, Point move, int player){
-        //get clone of old board
         int[][] newboard = new int[8][8];
         for (int i = 0; i < 8; i++) {
-            for (int j = 0; j < 8; j++) {
-                newboard[i][j] = board[i][j];
+            System.arraycopy(board[i], 0, newboard[i], 0, 8);
+        }
+
+        int opponent = (player == 1) ? 2 : 1;
+
+        // Vérifier si le coup est valide en vérifiant les cases voisines
+        if (isValidMove(board, x, y, player)) {
+            // Mettre à jour la case jouée
+            newboard[x][y] = player;
+
+            // Mettre à jour les pions capturés
+            capturePieces(newboard, x, y, player);
+        }
+
+        return newboard;
+    }
+
+    // Vérifie si le coup est valide
+    public static boolean isValidMove(int[][] board, int x, int y, int player) {
+        // Vérifie si la case est vide
+        if (board[x][y] != 0) {
+            return false;
+        }
+
+        // Vérifie s'il y a des pièces à capturer dans toutes les directions
+        boolean isValid = false;
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dy = -1; dy <= 1; dy++) {
+                if (dx == 0 && dy == 0) continue;
+                if (isCaptureDirection(board, x, y, dx, dy, player)) {
+                    isValid = true;
+                }
             }
         }
 
-        newboard[move.x][move.y] = player;
-        //reverse pieces
-        /*
-        ArrayList<Point> rev = GameLogic.getReversePoints(newboard,player,move.x,move.y);
-        for(Point pt : rev){
-            newboard[pt.x][pt.y] = player;
+        return isValid;
+    }
+
+    // Vérifie si des pions sont capturés dans une direction donnée
+    public static boolean isCaptureDirection(int[][] board, int x, int y, int dx, int dy, int player) {
+        int opponent = (player == 1) ? 2 : 1;
+        int currentX = x + dx;
+        int currentY = y + dy;
+
+        // Avancer dans la direction tant qu'on trouve des pions de l'adversaire
+        while (currentX >= 0 && currentX < 8 && currentY >= 0 && currentY < 8 && board[currentX][currentY] == opponent) {
+            currentX += dx;
+            currentY += dy;
         }
-        */
+
+        // Si on atteint une pièce de notre couleur, alors il y a capturation
+        if (currentX >= 0 && currentX < 8 && currentY >= 0 && currentY < 8 && board[currentX][currentY] == player) {
+            return true;
+        }
+
+        return false;
+    }
+
+    // Capture les pions dans toutes les directions si possible
+    public static void capturePieces(int[][] board, int x, int y, int player) {
+        int opponent = (player == 1) ? 2 : 1;
+
+        // Parcourir toutes les directions
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dy = -1; dy <= 1; dy++) {
+                if (dx == 0 && dy == 0) continue;
+
+                // Vérifier si des pions peuvent être capturés dans cette direction
+                if (isCaptureDirection(board, x, y, dx, dy, player)) {
+                    int currentX = x + dx;
+                    int currentY = y + dy;
+
+                    // Capturer les pions jusqu'à atteindre une pièce de notre couleur
+                    while (board[currentX][currentY] == opponent) {
+                        board[currentX][currentY] = player;
+                        currentX += dx;
+                        currentY += dy;
+                    }
+                }
+            }
+        }
+    }
+
+
+    public static int[][] getNewBoardAfterMove(int[][] board, int x, int y, int playerColor){
+        int[][] midboard = new int[8][8];
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                midboard[i][j] = board[i][j];
+            }
+        }
+        midboard[x][y] = playerColor;
+
+        int [][] newboard = new int[8][8];
+        newboard = updateCaseColor(midboard, x, y, playerColor);
+
         return newboard;
     }
 
