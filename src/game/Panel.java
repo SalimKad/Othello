@@ -43,16 +43,13 @@ public class Panel extends JPanel implements BoardInterface {
 
     @Override
     public void handleClick(int i, int j) {
-        System.out.println("Clicked case");
+        System.out.println("Clicked case "+i+","+j);
 
         if(awaitForClick && GameLogic.canPlay(board,turn,i,j)){
             System.out.println("User Played in : "+ i + " , " + j);
-
-            //update board
-            board = GameLogic.getNewBoardAfterMove(board,new Point(i,j),turn);
+            board = GameLogic.getNewBoardAfterMove(board,i,j,turn);
+            updateBoardInfo();
             repaint();
-
-            //advance turn
             turn = (turn == 1) ? 2 : 1;
 
             //awaitForClick = false;

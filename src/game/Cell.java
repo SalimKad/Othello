@@ -50,14 +50,6 @@ public class Cell extends JLabel implements MouseListener {
             g.fillOval(0,0,this.getWidth(),this.getHeight());
             g.setColor(grid.getBackground());
             g.fillOval(4,4,this.getWidth()-8,this.getHeight()-8);
-        }else if(highlight == 2){
-            g.setColor(highlightColor);
-            g.fillOval(0,0,this.getWidth(),this.getHeight());
-            g.setColor(grid.getBackground());
-            g.fillOval(4,4,this.getWidth()-8,this.getHeight()-8);
-        }else if(highlight == 10){
-            g.setColor(highlightColor);
-            g.fillOval(0,0,this.getWidth(),this.getHeight());
         }
 
         super.paintComponent(g);
