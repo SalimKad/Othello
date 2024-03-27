@@ -33,16 +33,6 @@ public class GameLogic {
         return null;
     }
 
-    public static int getTotalStoneCount(int[][] board){
-        int c = 0;
-        for (int i = 0; i < 8; i++) {
-            for (int j = 0; j < 8; j++) {
-                if(board[i][j] != 0) c++;
-            }
-        }
-        return c;
-    }
-
     public static boolean canPlay(int[][] board,int player,int i,int j){
 
         if(board[i][j] != 0) return false;
@@ -244,5 +234,48 @@ public class GameLogic {
 
         return newboard;
     }
+
+    public static boolean isGameFinished(int[][] board){
+        return !(hasAnyMoves(board,1) || hasAnyMoves(board,2));
+    }
+
+    /*
+    public static int getTotalStoneCount(int[][] board){
+        int c = 0;
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                if(board[i][j] != 0) c++;
+            }
+        }
+        return c;
+    }*/
+
+    public static int getPlayerStoneCount(int[][] board, int player){
+        int score = 0;
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                if(board[i][j] == player) score++;
+            }
+        }
+        return score;
+    }
+
+    public static int getWinner(int[][] board){
+        if(!isGameFinished(board))
+            return -1;
+        else{
+            int p1s = getPlayerStoneCount(board,1);
+            int p2s = getPlayerStoneCount(board,2);
+
+            if(p1s == p2s){
+                return 0;
+            }else if(p1s > p2s){
+                return 1;
+            }else{
+                return 2;
+            }
+        }
+    }
+
 
 }
