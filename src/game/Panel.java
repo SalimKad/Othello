@@ -1,5 +1,8 @@
 package game;
 
+import player.AIClassicPlayer;
+import player.Human_Player;
+
 import javax.swing.*;
 import javax.swing.border.*;
 import java.awt.*;
@@ -30,6 +33,9 @@ public class Panel extends JPanel implements BoardInterface {
     Timer timerplayer1;
     Timer timerplayer2;
 
+    Human_Player player1 = new Human_Player(1);
+    //Human_Player player2 = new Human_Player(2);
+    AIClassicPlayer player2 = new AIClassicPlayer(2);
 
 
     @Override
@@ -43,31 +49,31 @@ public class Panel extends JPanel implements BoardInterface {
     }
 
     @Override
-    public void handleClick(int i, int j) {
+    public void handleClick(int i, int j) throws InterruptedException {
         System.out.println("Clicked case "+i+","+j);
 
         if(awaitForClick && GameLogic.canPlay(board,turn,i,j)){
-            System.out.println("User Played in : "+ i + " , " + j);
+            System.out.println("Player " + turn + " played in : "+ i + " , " + j);
             board = GameLogic.getNewBoardAfterMove(board,i,j,turn);
             repaint();
 
             turn = (turn == 1) ? 2 : 1;
             updateBoardInfo();
 
-            //awaitForClick = false;
+            awaitForClick = false;
 
-            //manageTurn();
+            manageTurn();
         }
     }
 
-    public Panel() {
+    public Panel() throws InterruptedException {
         this.setBackground(Color.WHITE);
         this.setLayout(new BorderLayout());
 
         JPanel othelloBoard = new JPanel();
         othelloBoard.setLayout(new GridLayout(8,8));
         othelloBoard.setBackground(boardColor);
-        othelloBoard.setSize(new Dimension(800,800)); //taille de la fenêtre
+        othelloBoard.setSize(new Dimension(800,500)); //taille de la fenêtre
 
         resetBoard();
         cells = new Cell[8][8];
@@ -80,7 +86,7 @@ public class Panel extends JPanel implements BoardInterface {
 
         JPanel rightbar = new JPanel();
         rightbar.setLayout(new BoxLayout(rightbar,BoxLayout.Y_AXIS));
-        rightbar.setPreferredSize(new Dimension(200,0));
+        rightbar.setPreferredSize(new Dimension(300,0));
 
         title = new JLabel("  Othello  ", SwingConstants.CENTER);
         title.setFont(new Font("Arial", Font.BOLD, 30));
@@ -90,11 +96,10 @@ public class Panel extends JPanel implements BoardInterface {
         description.setWrapStyleWord(true);
         description.setLineWrap(true);
         description.setEditable(false);
-        //faire en sorte que la description se mette sur +sieurs lignes automatiquement
         description.setFont(new Font ("Arial", Font.ITALIC, 15));
         description.setForeground(Color.darkGray);
         description.setBackground(UIManager.getColor(rightbar));
-        description.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
+
 
         score1 = new JLabel("Score Joueur 1");
         score2 = new JLabel("Score Joueur 2");
@@ -122,6 +127,8 @@ public class Panel extends JPanel implements BoardInterface {
 
         this.add(rightbar,BorderLayout.EAST);
         this.add(othelloBoard);
+
+        manageTurn();
 
         updateBoardInfo();
         //updateTotalScore()
@@ -164,15 +171,6 @@ public class Panel extends JPanel implements BoardInterface {
                 else {
                     cells[i][j].highlight = 0;
                 }
-                /*
-                // Vérifie si le mouvement est possible pour le joueur dont c'est le tour
-                if (turn == 1 && GameLogic.canPlay(board, 1, i, j)) {
-                    cells[i][j].highlight = 1;
-                } else if (turn == 2 && GameLogic.canPlay(board, 2, i, j)) {
-                    cells[i][j].highlight = 1;
-                } else {
-                    cells[i][j].highlight = 0;
-                }*/
             }
         }
 
@@ -181,8 +179,7 @@ public class Panel extends JPanel implements BoardInterface {
     }
 
 
-    /*
-    public void manageTurn(){
+    public void manageTurn() throws InterruptedException {
         if(GameLogic.hasAnyMoves(board,1) || GameLogic.hasAnyMoves(board,2)) {
             updateBoardInfo();
             if (turn == 1) {
@@ -191,43 +188,61 @@ public class Panel extends JPanel implements BoardInterface {
                         awaitForClick = true;
                         //after click this function should be call backed
                     } else {
-                        player1HandlerTimer.start();
+                        //timerplayer1.start();
                     }
                 }else{
-                    //forfeit this move and pass the turn
-                    System.out.println("Player 1 has no legal moves !");
+                    System.out.println("Player 1 can't play !");
                     turn = 2;
                     manageTurn();
                 }
             } else {
                 if(GameLogic.hasAnyMoves(board,2)) {
                     if (player2.isUserPlayer()) {
-                        awaitForClick = true;
-                        //after click this function should be call backed
+                        handleAI(player2);
+                        //awaitForClick = false;
                     } else {
-                        player2HandlerTimer.start();
+                        //timerplayer2.start();
                     }
                 }else{
-                    //forfeit this move and pass the turn
-                    System.out.println("Player 2 has no legal moves !");
+                    System.out.println("Player 2 can't play !");
                     turn = 1;
                     manageTurn();
                 }
             }
         }else{
-            //game finished
             System.out.println("Game Finished !");
-
             int winner = GameLogic.getWinner(board);
-            if(winner==1) totalscore1++;
+            if(winner==1) {
+                totalscore1++;
+            }
             else if(winner==2) totalscore2++;
+            System.out.println("Player " + winner + " is the winner !");
             //updateTotalScore();
             //restart
-            //resetBoard();
-            //turn=1;
-            //manageTurn();
+            resetBoard();
+            turn=1;
+            manageTurn();
         }
-    }*/
+    }
+
+    public void handleAI(AIClassicPlayer ai) throws InterruptedException {
+        Point aiPlayPoint = ai.play(board);
+        System.out.println(aiPlayPoint);
+        int i = aiPlayPoint.x;
+        int j = aiPlayPoint.y;
+        if(!GameLogic.canPlay(board,ai.myMark,i,j)) System.err.println("FATAL : AI Invalid Move !");
+        System.out.println("Player " + turn + " played in : "+ i + " , " + j);
+
+        //update board
+        board = GameLogic.getNewBoardAfterMove(board,aiPlayPoint.x, aiPlayPoint.y,turn);
+
+        //advance turn
+        turn = (turn == 1) ? 2 : 1;
+        updateBoardInfo();
+        manageTurn();
+        Thread.sleep(1000);
+        repaint();
+    }
 
     //total score
 

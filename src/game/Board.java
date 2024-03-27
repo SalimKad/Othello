@@ -11,7 +11,7 @@ public class Board extends JFrame implements BoardInterface {
     public Cell[][] cells;
     int [][] board;
 
-    public Board(String title, int [][] board) {
+    public Board(String title, int [][] board) throws InterruptedException {
         this.board = board;
 
         Panel othelloBoard = new Panel();

@@ -5,20 +5,16 @@ import java.awt.*;
 
 public class Window extends JFrame {
     // main function
-    public Window()
-    {
+    public Window() throws InterruptedException {
         Panel panel = new Panel();
         this.add(panel);
         this.setTitle("Jeu d'Othello");
-        this.setSize(800,600);
-        //this.pack(); //définir taille composants
-        // Close operation
+        this.setSize(800,500);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        // Make the frame visible
         this.setVisible(true);
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
 
         new Window();
         System.out.println("Hello world!");
