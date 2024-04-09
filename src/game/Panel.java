@@ -50,10 +50,9 @@ public class Panel extends JPanel implements BoardInterface {
 
     @Override
     public void handleClick(int i, int j) throws InterruptedException {
-        System.out.println("Clicked case "+i+","+j);
-
+        //System.out.println("Clicked case "+i+","+j);
         if(awaitForClick && GameLogic.canPlay(board,turn,i,j)){
-            System.out.println("Player " + turn + " played in : "+ i + " , " + j);
+            System.out.println("Player " + turn + " played in case : "+ i + " , " + j);
             board = GameLogic.getNewBoardAfterMove(board,i,j,turn);
             repaint();
 
@@ -96,7 +95,7 @@ public class Panel extends JPanel implements BoardInterface {
         description.setWrapStyleWord(true);
         description.setLineWrap(true);
         description.setEditable(false);
-        description.setFont(new Font ("Arial", Font.ITALIC, 15));
+        description.setFont(new Font ("Poppins", Font.ITALIC, 15));
         description.setForeground(Color.darkGray);
         description.setBackground(UIManager.getColor(rightbar));
 
@@ -227,21 +226,19 @@ public class Panel extends JPanel implements BoardInterface {
 
     public void handleAI(AIClassicPlayer ai) throws InterruptedException {
         Point aiPlayPoint = ai.play(board);
-        System.out.println(aiPlayPoint);
+        //System.out.println(aiPlayPoint);
         int i = aiPlayPoint.x;
         int j = aiPlayPoint.y;
-        if(!GameLogic.canPlay(board,ai.myMark,i,j)) System.err.println("FATAL : AI Invalid Move !");
-        System.out.println("Player " + turn + " played in : "+ i + " , " + j);
+        if(!GameLogic.canPlay(board,ai.myMark,i,j)) System.err.println("AI Invalid Move !");
+        System.out.println("Player " + turn + " played in case : "+ i + " , " + j);
 
-        //update board
         board = GameLogic.getNewBoardAfterMove(board,aiPlayPoint.x, aiPlayPoint.y,turn);
 
-        //advance turn
         turn = (turn == 1) ? 2 : 1;
         updateBoardInfo();
         manageTurn();
-        Thread.sleep(1000);
         repaint();
+        Thread.sleep(1000);
     }
 
     //total score
