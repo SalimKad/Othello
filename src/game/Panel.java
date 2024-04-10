@@ -1,6 +1,7 @@
 package game;
 
 import player.AIClassicPlayer;
+import player.AIPlayer;
 import player.Human_Player;
 
 import javax.swing.*;
@@ -35,7 +36,8 @@ public class Panel extends JPanel implements BoardInterface {
 
     Human_Player player1 = new Human_Player(1);
     //Human_Player player2 = new Human_Player(2);
-    AIClassicPlayer player2 = new AIClassicPlayer(2);
+    //AIClassicPlayer player2 = new AIClassicPlayer(2);
+    AIPlayer player2 = new AIPlayer(2, 3);
 
 
     @Override
@@ -57,7 +59,9 @@ public class Panel extends JPanel implements BoardInterface {
             repaint();
 
             turn = (turn == 1) ? 2 : 1;
+            System.out.println("Turn : " + turn);
             updateBoardInfo();
+            System.out.println("Board updated");
 
             awaitForClick = false;
 
@@ -196,10 +200,11 @@ public class Panel extends JPanel implements BoardInterface {
                 }
             } else {
                 if(GameLogic.hasAnyMoves(board,2)) {
-                    if (player2.isUserPlayer()) {
+                    if (!player2.isUserPlayer()) {
                         handleAI(player2);
                         //awaitForClick = false;
                     } else {
+                        //System.out.println("AI Player 2");
                         //timerplayer2.start();
                     }
                 }else{
@@ -227,6 +232,23 @@ public class Panel extends JPanel implements BoardInterface {
     public void handleAI(AIClassicPlayer ai) throws InterruptedException {
         Point aiPlayPoint = ai.play(board);
         //System.out.println(aiPlayPoint);
+        int i = aiPlayPoint.x;
+        int j = aiPlayPoint.y;
+        if(!GameLogic.canPlay(board,ai.myMark,i,j)) System.err.println("AI Invalid Move !");
+        System.out.println("Player " + turn + " played in case : "+ i + " , " + j);
+
+        board = GameLogic.getNewBoardAfterMove(board,aiPlayPoint.x, aiPlayPoint.y,turn);
+
+        turn = (turn == 1) ? 2 : 1;
+        updateBoardInfo();
+        manageTurn();
+        repaint();
+        Thread.sleep(1000);
+    }
+
+    public void handleAI(AIPlayer ai) throws InterruptedException {
+        Point aiPlayPoint = ai.play(board);
+        System.out.println("aiPlayPoint : " + aiPlayPoint);
         int i = aiPlayPoint.x;
         int j = aiPlayPoint.y;
         if(!GameLogic.canPlay(board,ai.myMark,i,j)) System.err.println("AI Invalid Move !");
