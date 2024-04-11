@@ -1,31 +1,41 @@
 package player;
 
-import game.*;
+import game.GameLogic;
+
 import java.awt.*;
 import java.util.ArrayList;
 
-public class AIabsolutePlayer extends AIPlayer {
 
-    public AIabsolutePlayer(int mark, int maxDepth){
+public class AImobilitePlayer extends AIPlayer {
+
+    public AImobilitePlayer(int mark, int maxDepth){
         super(mark,maxDepth);
     }
 
     @Override
     protected double evaluateBoard(int[][] board, int player) {
         int opponent = (player == 1) ? 2 : 1;
-        int playerCount = 0;
-        int opponentCount = 0;
+        ArrayList<Point> playerMoves = GameLogic.getAllPossibleMoves(board, player);
+        ArrayList<Point> opponentMoves = GameLogic.getAllPossibleMoves(board, opponent);
+        int cornerBonus = calculateCornerBonus(board, player);
 
-        for (int i = 0; i < board.length; i++) {
-            for (int j = 0; j < board[i].length; j++) {
-                if (board[i][j] == player) {
-                    playerCount++;
-                } else if (board[i][j] == opponent) {
-                    opponentCount++;
-                }
+        int mobilityScore = playerMoves.size() - opponentMoves.size();
+        return mobilityScore + cornerBonus;
+    }
+
+    private int calculateCornerBonus(int[][] board, int player) {
+        int opponent = (player == 1) ? 2 : 1;
+        int score = 0;
+        // Corners are at (0,0), (0,7), (7,0), (7,7)
+        int[][] corners = {{0, 0}, {0, 7}, {7, 0}, {7, 7}};
+        for (int[] corner : corners) {
+            if (board[corner[0]][corner[1]] == player) {
+                score += 25;  // Bonus for player owning a corner
+            } else if (board[corner[0]][corner[1]] == opponent) {
+                score -= 25;  // Penalty if opponent owns a corner
             }
         }
-        return playerCount - opponentCount;
+        return score;
     }
 
 

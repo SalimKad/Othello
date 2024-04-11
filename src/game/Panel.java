@@ -2,6 +2,9 @@ package game;
 
 import player.AIClassicPlayer;
 import player.AIPlayer;
+import player.AIpositionalPlayer;
+import player.AImobilitePlayer;
+import player.AImixtePlayer;
 import player.Human_Player;
 
 import javax.swing.*;
@@ -13,17 +16,18 @@ import java.util.ArrayList;
 //tous les composants de la fenêtre
 public class Panel extends JPanel implements BoardInterface {
 
-    int [][] board;
+    int[][] board;
     Cell[][] cells;
 
     int turn = 1; //noir
-    Color boardColor = new Color(201,193,253); //violet clair
+    Color boardColor = new Color(201, 193, 253); //violet clair
 
     JLabel title;
     JTextArea description;
     JLabel score1;
     JLabel score2;
     private boolean awaitForClick = true; //remettre a false + tard
+    private boolean gameStarted = false;
 
     int totalscore1 = 0;
     int totalscore2 = 0;
@@ -34,28 +38,36 @@ public class Panel extends JPanel implements BoardInterface {
     Timer timerplayer1;
     Timer timerplayer2;
 
-    Human_Player player1 = new Human_Player(1);
+    //Human_Player player1 = new Human_Player(1);
     //Human_Player player2 = new Human_Player(2);
     //AIClassicPlayer player2 = new AIClassicPlayer(2);
-    AIPlayer player2 = new AIPlayer(2, 3);
+    //AIPlayer player2 = new AIPlayer(2, 3);
+    //AIpositionalPlayer player2 = new AIpositionalPlayer(2, 5);
+
+    Player player1;
+    Player player2;
+
+    JComboBox<String> player1Type;
+    JComboBox<String> player2Type;
+    JButton startButton;
 
 
     @Override
-    public int getBoardValue(int i,int j){
+    public int getBoardValue(int i, int j) {
         return board[i][j];
     }
 
     @Override
-    public void setBoardValue(int i,int j, int value){
+    public void setBoardValue(int i, int j, int value) {
         board[i][j] = value;
     }
 
     @Override
     public void handleClick(int i, int j) throws InterruptedException {
         //System.out.println("Clicked case "+i+","+j);
-        if(awaitForClick && GameLogic.canPlay(board,turn,i,j)){
-            System.out.println("Player " + turn + " played in case : "+ i + " , " + j);
-            board = GameLogic.getNewBoardAfterMove(board,i,j,turn);
+        if (awaitForClick && GameLogic.canPlay(board, turn, i, j)) {
+            System.out.println("Player " + turn + " played in case : " + i + " , " + j);
+            board = GameLogic.getNewBoardAfterMove(board, i, j, turn);
             repaint();
 
             turn = (turn == 1) ? 2 : 1;
@@ -70,26 +82,36 @@ public class Panel extends JPanel implements BoardInterface {
     }
 
     public Panel() throws InterruptedException {
+        setLayout(new BorderLayout());
+        SwingUtilities.invokeLater(() -> {
+            try {
+                showPlayerSetupDialog();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        });  // Utilise SwingUtilities pour s'assurer que cela est exécuté dans l'EDT
+
+
         this.setBackground(Color.WHITE);
         this.setLayout(new BorderLayout());
 
         JPanel othelloBoard = new JPanel();
-        othelloBoard.setLayout(new GridLayout(8,8));
+        othelloBoard.setLayout(new GridLayout(8, 8));
         othelloBoard.setBackground(boardColor);
-        othelloBoard.setSize(new Dimension(800,500)); //taille de la fenêtre
+        othelloBoard.setSize(new Dimension(800, 500)); //taille de la fenêtre
 
         resetBoard();
         cells = new Cell[8][8];
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
-                cells[i][j] = new Cell(this,othelloBoard,i,j);
+                cells[i][j] = new Cell(this, othelloBoard, i, j);
                 othelloBoard.add(cells[i][j]);
             }
         }
 
         JPanel rightbar = new JPanel();
-        rightbar.setLayout(new BoxLayout(rightbar,BoxLayout.Y_AXIS));
-        rightbar.setPreferredSize(new Dimension(300,0));
+        rightbar.setLayout(new BoxLayout(rightbar, BoxLayout.Y_AXIS));
+        rightbar.setPreferredSize(new Dimension(300, 0));
 
         title = new JLabel("  Othello  ", SwingConstants.CENTER);
         title.setFont(new Font("Arial", Font.BOLD, 30));
@@ -99,7 +121,7 @@ public class Panel extends JPanel implements BoardInterface {
         description.setWrapStyleWord(true);
         description.setLineWrap(true);
         description.setEditable(false);
-        description.setFont(new Font ("Poppins", Font.ITALIC, 15));
+        description.setFont(new Font("Poppins", Font.ITALIC, 15));
         description.setForeground(Color.darkGray);
         description.setBackground(UIManager.getColor(rightbar));
 
@@ -108,8 +130,8 @@ public class Panel extends JPanel implements BoardInterface {
         score2 = new JLabel("Score Joueur 2");
         totscore1 = new JLabel("Total Score Joueur 1");
         totscore2 = new JLabel("Total Score Joueur 2");
-        EmptyBorder leftBorder = new EmptyBorder(0, 20,0,0);
-        EmptyBorder descrBorder = new EmptyBorder(0,0,20,0);
+        EmptyBorder leftBorder = new EmptyBorder(0, 20, 0, 0);
+        EmptyBorder descrBorder = new EmptyBorder(0, 0, 20, 0);
 
         EmptyBorder borderTitleScore = new EmptyBorder(20, 0, 20, 0);
         LineBorder line = new LineBorder(Color.darkGray, 2, true);
@@ -128,10 +150,10 @@ public class Panel extends JPanel implements BoardInterface {
         rightbar.add(totscore2);
 
 
-        this.add(rightbar,BorderLayout.EAST);
+        this.add(rightbar, BorderLayout.EAST);
         this.add(othelloBoard);
 
-        manageTurn();
+        //manageTurn();
 
         updateBoardInfo();
         //updateTotalScore()
@@ -139,22 +161,22 @@ public class Panel extends JPanel implements BoardInterface {
         //turn
     }
 
-    public void resetBoard(){
+    public void resetBoard() {
         board = new int[8][8];
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
-                board[i][j]=0;
+                board[i][j] = 0;
             }
         }
         //retour à la grille initiale
-        setBoardValue(3,3,2); //blanc
-        setBoardValue(4,4,2);
-        setBoardValue(3,4,1); //noir
-        setBoardValue(4,3,1);
+        setBoardValue(3, 3, 2); //blanc
+        setBoardValue(4, 4, 2);
+        setBoardValue(3, 4, 1); //noir
+        setBoardValue(4, 3, 1);
 
     }
 
-    public void updateBoardInfo(){
+    public void updateBoardInfo() {
 
         int p1score = 0;
         int p2score = 0;
@@ -167,11 +189,10 @@ public class Panel extends JPanel implements BoardInterface {
                 if (board[i][j] == 1) p1score++;
                 if (board[i][j] == 2) p2score++;
 
-                Point point = new Point(i,j);
-                if(possibleMoves.contains(point)) {
+                Point point = new Point(i, j);
+                if (possibleMoves.contains(point)) {
                     cells[i][j].highlight = 1;
-                }
-                else {
+                } else {
                     cells[i][j].highlight = 0;
                 }
             }
@@ -183,50 +204,59 @@ public class Panel extends JPanel implements BoardInterface {
 
 
     public void manageTurn() throws InterruptedException {
-        if(GameLogic.hasAnyMoves(board,1) || GameLogic.hasAnyMoves(board,2)) {
+        if (GameLogic.hasAnyMoves(board, turn)) {
             updateBoardInfo();
-            if (turn == 1) {
-                if(GameLogic.hasAnyMoves(board,1)) {
-                    if (player1.isUserPlayer()) {
-                        awaitForClick = true;
-                        //after click this function should be call backed
-                    } else {
-                        //timerplayer1.start();
-                    }
-                }else{
-                    System.out.println("Player 1 can't play !");
-                    turn = 2;
-                    manageTurn();
-                }
+            Player currentPlayer = (turn == 1) ? player1 : player2;
+
+            if (currentPlayer.isUserPlayer()) {
+                awaitForClick = true; // Attendre un clic de l'utilisateur s'il s'agit d'un joueur humain
             } else {
-                if(GameLogic.hasAnyMoves(board,2)) {
-                    if (!player2.isUserPlayer()) {
-                        handleAI(player2);
-                        //awaitForClick = false;
-                    } else {
-                        //System.out.println("AI Player 2");
-                        //timerplayer2.start();
-                    }
-                }else{
-                    System.out.println("Player 2 can't play !");
-                    turn = 1;
-                    manageTurn();
-                }
+                handleAI(currentPlayer); // Gérer le tour automatiquement s'il s'agit d'une IA
             }
-        }else{
-            System.out.println("Game Finished !");
-            int winner = GameLogic.getWinner(board);
-            if(winner==1) {
-                totalscore1++;
+        } else {
+            System.out.println("Player " + turn + " can't play !");
+            turn = (turn == 1) ? 2 : 1; // Passer le tour à l'autre joueur
+            if (!(GameLogic.hasAnyMoves(board, turn))) {
+                endGame();
+            } else {
+                manageTurn(); // Gérer le tour suivant
             }
-            else if(winner==2) totalscore2++;
-            System.out.println("Player " + winner + " is the winner !");
-            //updateTotalScore();
-            //restart
-            resetBoard();
-            turn=1;
-            manageTurn();
         }
+    }
+
+    private void handleAI(Player ai) throws InterruptedException {
+        Point aiPlayPoint = ai.play(board);
+        if (aiPlayPoint != null) {
+            executeMove(aiPlayPoint.x, aiPlayPoint.y, ai);
+        } else {
+            System.out.println("AIPlayer n'a pas de mouvement valide.");
+            turn = (turn == 1) ? 2 : 1; // Passer le tour à l'adversaire
+            System.out.println("Turn : " + turn);
+            manageTurn(); // Continuer avec le prochain tour
+        }
+    }
+
+    private void executeMove(int x, int y, Player player) throws InterruptedException {
+        if (GameLogic.canPlay(board, player.getMark(), x, y)) {
+            System.out.println("Player " + turn + " played in case : " + x + " , " + y);
+            board = GameLogic.getNewBoardAfterMove(board, x, y, player.getMark());
+            turn = (turn == 1) ? 2 : 1;
+            updateBoardInfo();
+            repaint();
+            Thread.sleep(1000); // Attendre pour visualisation
+            manageTurn();
+        } else {
+            System.err.println("Invalid Move by AI");
+        }
+    }
+
+    private void endGame() throws InterruptedException {
+        System.out.println("Game Finished !");
+        int winner = GameLogic.getWinner(board);
+        System.out.println("Player " + winner + " is the winner !");
+        resetBoard();
+        turn = 1;
+        manageTurn();
     }
 
     public void handleAI(AIClassicPlayer ai) throws InterruptedException {
@@ -234,10 +264,10 @@ public class Panel extends JPanel implements BoardInterface {
         //System.out.println(aiPlayPoint);
         int i = aiPlayPoint.x;
         int j = aiPlayPoint.y;
-        if(!GameLogic.canPlay(board,ai.myMark,i,j)) System.err.println("AI Invalid Move !");
-        System.out.println("Player " + turn + " played in case : "+ i + " , " + j);
+        if (!GameLogic.canPlay(board, ai.myMark, i, j)) System.err.println("AI Invalid Move !");
+        System.out.println("Player " + turn + " played in case : " + i + " , " + j);
 
-        board = GameLogic.getNewBoardAfterMove(board,aiPlayPoint.x, aiPlayPoint.y,turn);
+        board = GameLogic.getNewBoardAfterMove(board, aiPlayPoint.x, aiPlayPoint.y, turn);
 
         turn = (turn == 1) ? 2 : 1;
         updateBoardInfo();
@@ -248,21 +278,85 @@ public class Panel extends JPanel implements BoardInterface {
 
     public void handleAI(AIPlayer ai) throws InterruptedException {
         Point aiPlayPoint = ai.play(board);
-        System.out.println("aiPlayPoint : " + aiPlayPoint);
-        int i = aiPlayPoint.x;
-        int j = aiPlayPoint.y;
-        if(!GameLogic.canPlay(board,ai.myMark,i,j)) System.err.println("AI Invalid Move !");
-        System.out.println("Player " + turn + " played in case : "+ i + " , " + j);
+        if (aiPlayPoint != null) {
+            System.out.println("aiPlayPoint : " + aiPlayPoint);
+            int i = aiPlayPoint.x;
+            int j = aiPlayPoint.y;
+            if (!GameLogic.canPlay(board, ai.myMark, i, j)) System.err.println("AI Invalid Move !");
+            System.out.println("Player " + turn + " played in case : " + i + " , " + j);
 
-        board = GameLogic.getNewBoardAfterMove(board,aiPlayPoint.x, aiPlayPoint.y,turn);
+            board = GameLogic.getNewBoardAfterMove(board, aiPlayPoint.x, aiPlayPoint.y, turn);
 
-        turn = (turn == 1) ? 2 : 1;
-        updateBoardInfo();
-        manageTurn();
-        repaint();
-        Thread.sleep(1000);
+            turn = (turn == 1) ? 2 : 1;
+            updateBoardInfo();
+            manageTurn();
+            repaint();
+            Thread.sleep(1000);
+        } else {
+            System.out.println("AIPlayer n'a pas de mouvement valide.");
+            // Gérer le cas où l'IA n'a pas de mouvement valide
+            turn = (turn == 1) ? 2 : 1; // Passer le tour à l'adversaire
+            System.out.println("Turn : " + turn);
+            manageTurn(); // Continuer avec le prochain tour
+        }
+
     }
 
+    private void setupPlayers() throws InterruptedException {
+        String player1Selection = (String) player1Type.getSelectedItem();
+        String player2Selection = (String) player2Type.getSelectedItem();
+
+        player1 = createPlayer(player1Selection, 1);
+        player2 = createPlayer(player2Selection, 2);
+
+        resetBoard();  // Préparer le plateau pour une nouvelle partie
+        updateBoardInfo();  // Mettre à jour l'affichage
+        repaint();
+        //manageTurn();
+    }
+
+    private Player createPlayer(String selection, int mark) {
+        switch (selection) {
+            case "Humain":
+                return new Human_Player(mark);
+            case "IA Classique":
+                return new AIClassicPlayer(mark);
+            case "IA Positionnelle":
+                return new AIpositionalPlayer(mark, 5);
+            case "IA Mobilité":
+                return new AImobilitePlayer(mark, 5);
+            case "IA Mixte":
+                return new AImixtePlayer(mark, 5);
+            default:
+                return new Human_Player(mark);  // Default to human if something goes wrong
+        }
+    }
     //total score
+
+    private void showPlayerSetupDialog() throws InterruptedException {
+        JPanel panel = new JPanel(new GridLayout(0, 1));
+        JComboBox<String> player1Type = new JComboBox<>(new String[]{"Humain", "IA Classique", "IA Positionnelle", "IA Mobilité", "IA Mixte"});
+        JComboBox<String> player2Type = new JComboBox<>(new String[]{"Humain", "IA Classique", "IA Positionnelle", "IA Mobilité", "IA Mixte"});
+
+        panel.add(new JLabel("Choisir Joueur 1:"));
+        panel.add(player1Type);
+        panel.add(new JLabel("Choisir Joueur 2:"));
+        panel.add(player2Type);
+
+        int result = JOptionPane.showConfirmDialog(null, panel, "Configuration des joueurs",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (result == JOptionPane.OK_OPTION) {
+            player1 = createPlayer((String) player1Type.getSelectedItem(), 1);
+            player2 = createPlayer((String) player2Type.getSelectedItem(), 2);
+            resetBoard();
+            updateBoardInfo();
+            repaint();
+            gameStarted = true;
+            manageTurn();
+        } else {
+            System.out.println("Game setup was cancelled.");
+        }
+    }
+
 
 }
