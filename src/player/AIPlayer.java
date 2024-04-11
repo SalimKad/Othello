@@ -75,7 +75,7 @@ public class AIPlayer extends Player {
         }
     }
 
-    private double evaluateBoard(int[][] board, int player) {
+    protected double evaluateBoard(int[][] board, int player) {
         return GameLogic.getPlayerStoneCount(board, player);
     }
 

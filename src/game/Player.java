@@ -15,4 +15,8 @@ public abstract class Player {
 
     abstract public Point play(int[][] board);
 
+    public int getMark() {
+        return myMark;
+    }
+
 }
