@@ -24,7 +24,7 @@ public class AIPlayer extends Player {
 
     @Override
     public Point play(int[][] board) {
-        System.out.println("AIPlayer play utilisé");
+        //System.out.println("AIPlayer play utilisé");
         Point bestMove = findBestMove(board, myMark);
         System.out.println("AIPlayer a choisi : " + bestMove);
         return bestMove;
