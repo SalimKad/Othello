@@ -48,10 +48,6 @@ public class Panel extends JPanel implements BoardInterface {
     Player player1;
     Player player2;
 
-    JComboBox<String> player1Type;
-    JComboBox<String> player2Type;
-
-
     public Panel() {
         setLayout(new BorderLayout());
         SwingUtilities.invokeLater(() -> {
@@ -84,11 +80,6 @@ public class Panel extends JPanel implements BoardInterface {
         rightbar.setLayout(new BoxLayout(rightbar, BoxLayout.Y_AXIS));
         rightbar.setPreferredSize(new Dimension(300, 0));
 
-        /*winnerLabel.setFont(new Font("Arial", Font.BOLD, 15 ));
-        winnerLabel.setForeground(new Color(78, 52, 46, 255));  // Couleur de texte pour améliorer la visibilité
-        winnerLabel.setBorder(new EmptyBorder(10, 10, 10, 10));  // Ajout de marges autour du label*/
-
-
         title = new JLabel("  Othello  ", SwingConstants.CENTER);
         title.setFont(new Font("Arial", Font.BOLD, 30));
         title.setForeground(Color.darkGray);
@@ -101,11 +92,10 @@ public class Panel extends JPanel implements BoardInterface {
         description.setForeground(Color.darkGray);
         description.setBackground(UIManager.getColor(rightbar));
 
-
-        //score1 = new JLabel("Score Joueur 1");
-        //score2 = new JLabel("Score Joueur 2");
-        totscore1 = new JLabel("Total Score Joueur 1");
-        totscore2 = new JLabel("Total Score Joueur 2");
+        totscore1 = new JLabel("Total Score Joueur 1 : 0");
+        totscore1.setFont(new Font("Arial", Font.BOLD, 15));
+        totscore2 = new JLabel("Total Score Joueur 2 : 0");
+        totscore2.setFont(new Font("Arial", Font.BOLD, 15));
         EmptyBorder leftBorder = new EmptyBorder(0, 20, 0, 0);
         EmptyBorder descrBorder = new EmptyBorder(0, 0, 20, 0);
 
@@ -120,14 +110,8 @@ public class Panel extends JPanel implements BoardInterface {
         rightbar.add(description);
         description.setBorder(descrBorder);
 
-        //rightbar.add(score1);
-        //rightbar.add(score2);
-        //rightbar.add(new JLabel("---------------------------"));
         rightbar.add(totscore1);
         rightbar.add(totscore2);
-
-        /*rightbar.add(new JSeparator());
-        rightbar.add(winnerLabel);*/
 
         rightbar.add(Box.createVerticalGlue()); // Ajoute de l'espace flexible autour des éléments pour une meilleure disposition
 
