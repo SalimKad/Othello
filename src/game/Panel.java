@@ -26,10 +26,8 @@ public class Panel extends JPanel implements BoardInterface {
     JTextArea description;
     JLabel score1;
     JLabel score2;
-    //JLabel winnerLabel = new JLabel("Dernier gagnant: Aucun",SwingConstants.CENTER);
 
     private boolean awaitForClick = true; //remettre a false + tard
-    private boolean gameStarted = false;
 
     int totalscore1 = 0;
     int totalscore2 = 0;
@@ -41,9 +39,11 @@ public class Panel extends JPanel implements BoardInterface {
 
     Timer timerplayer1;
     Timer timerplayer2;
+    int timeLeftPlayer1 = 30;  // En secondes
+    int timeLeftPlayer2 = 30;  // En secondes
+    private long startTimePlayer1;
+    private long startTimePlayer2;
 
-    int timeLeftPlayer1 = 300;  // En secondes
-    int timeLeftPlayer2 = 300;  // En secondes
 
     Player player1;
     Player player2;
@@ -52,7 +52,7 @@ public class Panel extends JPanel implements BoardInterface {
     JComboBox<String> player2Type;
 
 
-    public Panel() throws InterruptedException {
+    public Panel() {
         setLayout(new BorderLayout());
         SwingUtilities.invokeLater(() -> {
             try {
@@ -134,10 +134,8 @@ public class Panel extends JPanel implements BoardInterface {
         this.add(rightbar, BorderLayout.EAST);
         this.add(othelloBoard);
 
-        //manageTurn();
 
         updateBoardInfo();
-        //updateTotalScore()
         //time
         // Créer les chronomètres pour chaque joueur
         timerplayer1 = new Timer(1000, e -> {
@@ -198,6 +196,32 @@ public class Panel extends JPanel implements BoardInterface {
 
             awaitForClick = false;
 
+            long endTime = System.currentTimeMillis();
+            if (turn == 1) {
+                timeLeftPlayer1 -= (int) ((endTime - startTimePlayer1) / 1000); // Convertir en secondes
+                System.out.println("Timer Joueur 1: " + formatTime(timeLeftPlayer1));
+            } else {
+                timeLeftPlayer2 -= (int) ((endTime - startTimePlayer2) / 1000); // Convertir en secondes
+                System.out.println("Timer Joueur 2: " + formatTime(timeLeftPlayer2));
+            }
+
+            // Gérer le timer dans l'EDT
+            SwingUtilities.invokeLater(() -> {
+                if (turn == 1) {
+                    try {
+                        updateTimerConsole(1);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                } else {
+                    try {
+                        updateTimerConsole(2);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            });
+
             manageTurn();
         }
     }
@@ -208,7 +232,7 @@ public class Panel extends JPanel implements BoardInterface {
         int p1score = 0;
         int p2score = 0;
 
-        ArrayList<Point> possibleMoves = new ArrayList<>();
+        ArrayList<Point> possibleMoves;
         possibleMoves = GameLogic.getAllPossibleMoves(board, turn);
 
         for (int i = 0; i < 8; i++) {
@@ -224,13 +248,23 @@ public class Panel extends JPanel implements BoardInterface {
                 }
             }
         }
-
-        //score1.setText(player1.playerName() + " : " + p1score);
-        //score2.setText(player2.playerName() + " : " + p2score);
     }
 
 
     public void manageTurn() throws InterruptedException {
+        // Arrêt de tous les Timers avant de commencer à gérer le tour pour éviter les déclenchements non désirés.
+        timerplayer1.stop();
+        timerplayer2.stop();
+
+        // démarrage du Timer après le début du tour de chaque joueur.
+        if (turn == 1) {
+            startTimePlayer1 = System.currentTimeMillis();
+            timerplayer1.start();
+        } else {
+            startTimePlayer2 = System.currentTimeMillis();
+            timerplayer2.start();
+        }
+
         if (!GameLogic.hasAnyMoves(board, turn)) {
             System.out.println("Player " + turn + " can't play !");
             turn = (turn == 1) ? 2 : 1;  // Passer le tour à l'autre joueur
@@ -238,12 +272,10 @@ public class Panel extends JPanel implements BoardInterface {
             if (!GameLogic.hasAnyMoves(board, turn)) {
                 System.out.println("Aucun des deux joueurs ne peut jouer !");
                 endGame();// Terminer la partie si aucun des deux joueurs ne peut jouer
-            }
-            else {
+            } else {
                 manageTurn(); // Continuer avec le prochain tour
             }
-        }
-        else {
+        } else {
             updateBoardInfo();
             Player currentPlayer = (turn == 1) ? player1 : player2;
 
@@ -303,7 +335,7 @@ public class Panel extends JPanel implements BoardInterface {
         totscore1.setText("Total Score Joueur 1: " + totalscore1);
         totscore2.setText("Total Score Joueur 2: " + totalscore2);
 
-        int response = JOptionPane.showConfirmDialog(null,  winnerName + " a gagné !\nVoulez-vous rejouer?", "Partie terminée",
+        int response = JOptionPane.showConfirmDialog(null, winnerName + " a gagné !\nVoulez-vous rejouer?", "Partie terminée",
                 JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
 
         if (response == JOptionPane.YES_OPTION) {
@@ -313,6 +345,8 @@ public class Panel extends JPanel implements BoardInterface {
             System.exit(0);  // Quitter l'application
         }
 
+        timerplayer1.stop(); // Arrêter les timers à la fin de la partie
+        timerplayer2.stop();
         resetBoard();
         turn = 1;
         updateBoardInfo();
@@ -355,7 +389,6 @@ public class Panel extends JPanel implements BoardInterface {
             resetBoard();
             updateBoardInfo();
             repaint();
-            gameStarted = true;
             manageTurn();
         } else {
             System.out.println("Game setup was cancelled.");
@@ -384,31 +417,34 @@ public class Panel extends JPanel implements BoardInterface {
         if (playerNum == 1) {
             if (timeLeftPlayer1 > 0) {
                 timeLeftPlayer1--;
-                System.out.println("Timer Joueur 1: " + formatTime(timeLeftPlayer1));
-            } else {
-                endGameDueToTime(1);
+                if(timeLeftPlayer1 % 5 == 0){
+                    System.out.println("Timer Joueur 1: " + formatTime(timeLeftPlayer1));
+                }
+                if (timeLeftPlayer1 <= 0) {
+                    timerplayer1.stop();
+                    endGameDueToTime(1);
+                }
             }
         } else {
             if (timeLeftPlayer2 > 0) {
                 timeLeftPlayer2--;
-                System.out.println("Timer Joueur 2: " + formatTime(timeLeftPlayer2));
-            } else {
-                endGameDueToTime(2);
+                if(timeLeftPlayer2 % 5 == 0){
+                    System.out.println("Timer Joueur 2: " + formatTime(timeLeftPlayer2));
+                }
+                if (timeLeftPlayer2 <= 0) {
+                    timerplayer2.stop();
+                    endGameDueToTime(2);
+                }
             }
         }
     }
 
-    private String formatTime(int timeInSeconds) {
-        int minutes = timeInSeconds / 60;
-        int seconds = timeInSeconds % 60;
-        return String.format("%02d:%02d", minutes, seconds);
-    }
-
     private void endGameDueToTime(int losingPlayerNum) throws InterruptedException {
         String winningPlayerName = (losingPlayerNum == 1) ? "Joueur 2" : "Joueur 1";
-        JOptionPane.showMessageDialog(this, "Le temps est écoulé! " + winningPlayerName + " gagne par le temps.",
+        System.out.println("Le temps est écoulé ! " + winningPlayerName + " gagne par le temps.");
+        JOptionPane.showMessageDialog(this, "Le temps est écoulé ! " + winningPlayerName + " gagne par le temps.",
                 "Temps écoulé", JOptionPane.INFORMATION_MESSAGE);
-        int response = JOptionPane.showConfirmDialog(null,  "Voulez-vous rejouer?", "Partie terminée",
+        int response = JOptionPane.showConfirmDialog(null, "Voulez-vous rejouer ?", "Partie terminée",
                 JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
         if (response == JOptionPane.YES_OPTION) {
             showPlayerSetupDialog();  // Afficher à nouveau le popup pour choisir les joueurs
@@ -422,6 +458,10 @@ public class Panel extends JPanel implements BoardInterface {
         repaint();
     }
 
-
+    private String formatTime(int timeInSeconds) {
+        int minutes = timeInSeconds / 60;
+        int seconds = timeInSeconds % 60;
+        return String.format("%02d:%02d", minutes, seconds);
+    }
 
 }
