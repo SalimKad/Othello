@@ -137,7 +137,7 @@ public class GameLogic {
                 }
             }
         }
-        System.out.println("Mouvements possibles pour le joueur " + player + ": " + result); // Ajout pour débogage
+        //System.out.println("Mouvements possibles pour le joueur " + player + ": " + result); // Ajout pour débogage
         return result;
     }
 
