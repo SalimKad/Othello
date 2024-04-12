@@ -212,7 +212,15 @@ public class Panel extends JPanel implements BoardInterface {
 
 
     public void manageTurn() throws InterruptedException {
-        if (GameLogic.hasAnyMoves(board, turn)) {
+        if (!GameLogic.hasAnyMoves(board, turn)) {
+            System.out.println("Player " + turn + " can't play !");
+            turn = (turn == 1) ? 2 : 1;  // Passer le tour à l'autre joueur
+            if (!GameLogic.hasAnyMoves(board, turn)) {
+                endGame();
+                return; // Terminer la partie si aucun des deux joueurs ne peut jouer
+            }
+        }
+        else {
             updateBoardInfo();
             Player currentPlayer = (turn == 1) ? player1 : player2;
 
@@ -229,14 +237,6 @@ public class Panel extends JPanel implements BoardInterface {
                 });
                 aiTimer.setRepeats(false); // S'assurer que le Timer s'exécute une seule fois
                 aiTimer.start();
-            }
-        } else {
-            System.out.println("Player " + turn + " can't play !");
-            turn = (turn == 1) ? 2 : 1; // Passer le tour à l'autre joueur
-            if (!(GameLogic.hasAnyMoves(board, turn))) {
-                endGame();
-            } else {
-                manageTurn(); // Gérer le tour suivant
             }
         }
     }
@@ -295,8 +295,8 @@ public class Panel extends JPanel implements BoardInterface {
         JPanel panel = new JPanel(new GridLayout(0, 2));
         JComboBox<String> player1Type = new JComboBox<>(new String[]{"Humain", "IA Classique", "IA Positionnelle", "IA Mobilité", "IA Mixte"});
         JComboBox<String> player2Type = new JComboBox<>(new String[]{"Humain", "IA Classique", "IA Positionnelle", "IA Mobilité", "IA Mixte"});
-        JSpinner player1Depth = new JSpinner(new SpinnerNumberModel(5, 1, 10, 1));
-        JSpinner player2Depth = new JSpinner(new SpinnerNumberModel(5, 1, 10, 1));
+        JSpinner player1Depth = new JSpinner(new SpinnerNumberModel(3, 1, 10, 1));
+        JSpinner player2Depth = new JSpinner(new SpinnerNumberModel(3, 1, 10, 1));
         player1Depth.setEnabled(false);
         player2Depth.setEnabled(false);
 

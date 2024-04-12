@@ -26,14 +26,14 @@ public class AIPlayer extends Player {
     public Point play(int[][] board) {
         //System.out.println("AIPlayer play utilisé");
         Point bestMove = findBestMove(board, myMark);
-        System.out.println("AIPlayer a choisi : " + bestMove);
+        System.out.println("AIPlayer a choisi : " + bestMove + " avec une évaluation de : " + (bestMove == null ? "Aucun mouvement" : evaluateBoard(board, myMark)));
         return bestMove;
     }
 
     private Point findBestMove(int[][] board, int player) {
         double bestValue = Double.NEGATIVE_INFINITY;
-        Point bestMove = null;
         ArrayList<Point> possibleMoves = GameLogic.getAllPossibleMoves(board, player);
+        Point bestMove = possibleMoves.get(0);
 
         for (Point move : possibleMoves) {
             int[][] newBoard = GameLogic.getNewBoardAfterMove(board, move.x, move.y, player);
