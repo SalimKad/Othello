@@ -1,6 +1,5 @@
 package game;
 
-import player.AIClassicPlayer;
 import player.AIPlayer;
 import player.AIpositionalPlayer;
 import player.AImobilitePlayer;
@@ -11,6 +10,7 @@ import javax.swing.*;
 import javax.swing.border.*;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Objects;
 
 //game panel
 //tous les composants de la fenêtre
@@ -290,41 +290,39 @@ public class Panel extends JPanel implements BoardInterface {
         repaint();
     }
 
-    private Player createPlayer(String selection, int mark) {
-        switch (selection) {
-            case "Humain":
-                return new Human_Player(mark);
-            case "IA Classique":
-                return new AIPlayer(mark,5);
-            case "IA Positionnelle":
-                return new AIpositionalPlayer(mark, 5);
-            case "IA Mobilité":
-                return new AImobilitePlayer(mark, 5);
-            case "IA Mixte":
-                return new AImixtePlayer(mark, 5);
-            default:
-                return new Human_Player(mark);  // Default to human if something goes wrong
-        }
-    }
-    //total score
-
     private void showPlayerSetupDialog() throws InterruptedException {
         JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(this); // Récupérer la fenêtre parente
-        JPanel panel = new JPanel(new GridLayout(0, 1));
+        JPanel panel = new JPanel(new GridLayout(0, 2));
         JComboBox<String> player1Type = new JComboBox<>(new String[]{"Humain", "IA Classique", "IA Positionnelle", "IA Mobilité", "IA Mixte"});
         JComboBox<String> player2Type = new JComboBox<>(new String[]{"Humain", "IA Classique", "IA Positionnelle", "IA Mobilité", "IA Mixte"});
+        JSpinner player1Depth = new JSpinner(new SpinnerNumberModel(5, 1, 10, 1));
+        JSpinner player2Depth = new JSpinner(new SpinnerNumberModel(5, 1, 10, 1));
+        player1Depth.setEnabled(false);
+        player2Depth.setEnabled(false);
+
+        // Ajouter des écouteurs pour activer/désactiver les spinners
+        player1Type.addActionListener(e -> player1Depth.setEnabled("IA Classique".equals(player1Type.getSelectedItem()) || "IA Positionnelle".equals(player1Type.getSelectedItem()) ||
+                "IA Mobilité".equals(player1Type.getSelectedItem()) || "IA Mixte".equals(player1Type.getSelectedItem())));
+        player2Type.addActionListener(e -> player2Depth.setEnabled("IA Classique".equals(player2Type.getSelectedItem()) || "IA Positionnelle".equals(player2Type.getSelectedItem()) ||
+                "IA Mobilité".equals(player2Type.getSelectedItem()) || "IA Mixte".equals(player2Type.getSelectedItem())));
 
         panel.add(new JLabel("Choisir Joueur 1:"));
         panel.add(player1Type);
+        panel.add(new JLabel("Profondeur max:"));
+        panel.add(player1Depth);
         panel.add(new JLabel("Choisir Joueur 2:"));
         panel.add(player2Type);
+        panel.add(new JLabel("Profondeur max:"));
+        panel.add(player2Depth);
 
         // Utiliser 'frame' comme parent pour la boîte de dialogue
         int result = JOptionPane.showConfirmDialog(frame, panel, "Configuration des joueurs",
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (result == JOptionPane.OK_OPTION) {
-            player1 = createPlayer((String) player1Type.getSelectedItem(), 1);
-            player2 = createPlayer((String) player2Type.getSelectedItem(), 2);
+            int depth1 = (int) player1Depth.getValue();
+            int depth2 = (int) player2Depth.getValue();
+            player1 = createPlayer((String) Objects.requireNonNull(player1Type.getSelectedItem()), 1, depth1);
+            player2 = createPlayer((String) Objects.requireNonNull(player2Type.getSelectedItem()), 2, depth2);
             resetBoard();
             updateBoardInfo();
             repaint();
@@ -335,6 +333,24 @@ public class Panel extends JPanel implements BoardInterface {
             System.exit(0);  // Quitter l'application
         }
     }
+
+    private Player createPlayer(String selection, int mark, int maxDepth) {
+        switch (selection) {
+            case "Humain":
+                return new Human_Player(mark);
+            case "IA Classique":
+                return new AIPlayer(mark, maxDepth);
+            case "IA Positionnelle":
+                return new AIpositionalPlayer(mark, maxDepth);
+            case "IA Mobilité":
+                return new AImobilitePlayer(mark, maxDepth);
+            case "IA Mixte":
+                return new AImixtePlayer(mark, maxDepth);
+            default:
+                return new Human_Player(mark);  // Default to human if something goes wrong
+        }
+    }
+
 
 
 
