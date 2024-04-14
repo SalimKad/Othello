@@ -1,10 +1,6 @@
 package game;
 
-import player.AIPlayer;
-import player.AIpositionalPlayer;
-import player.AImobilitePlayer;
-import player.AImixtePlayer;
-import player.Human_Player;
+import player.*;
 
 import javax.swing.*;
 import javax.swing.border.*;
@@ -18,6 +14,8 @@ public class Panel extends JPanel implements BoardInterface {
 
     int[][] board;
     Cell[][] cells;
+
+    boolean gameIsOver = false;
 
     int turn = 1; //noir
     Color boardColor = new Color(201, 193, 253); //violet clair
@@ -39,8 +37,8 @@ public class Panel extends JPanel implements BoardInterface {
 
     Timer timerplayer1;
     Timer timerplayer2;
-    int timeLeftPlayer1 = 30;  // En secondes
-    int timeLeftPlayer2 = 30;  // En secondes
+    int timeLeftPlayer1;  // En secondes
+    int timeLeftPlayer2;  // En secondes
     private long startTimePlayer1;
     private long startTimePlayer2;
 
@@ -152,6 +150,9 @@ public class Panel extends JPanel implements BoardInterface {
         setBoardValue(3, 4, 1); //noir
         setBoardValue(4, 3, 1);
 
+        timeLeftPlayer1 = 30;
+        timeLeftPlayer2 = 30;
+        gameIsOver = false;  // S'assurer que le jeu est marqué comme non terminé
     }
 
 
@@ -180,14 +181,14 @@ public class Panel extends JPanel implements BoardInterface {
 
             awaitForClick = false;
 
-            long endTime = System.currentTimeMillis();
+            /*long endTime = System.currentTimeMillis();
             if (turn == 1) {
                 timeLeftPlayer1 -= (int) ((endTime - startTimePlayer1) / 1000); // Convertir en secondes
                 System.out.println("Timer Joueur 1: " + formatTime(timeLeftPlayer1));
             } else {
                 timeLeftPlayer2 -= (int) ((endTime - startTimePlayer2) / 1000); // Convertir en secondes
                 System.out.println("Timer Joueur 2: " + formatTime(timeLeftPlayer2));
-            }
+            }*/
 
             // Gérer le timer dans l'EDT
             SwingUtilities.invokeLater(() -> {
@@ -308,6 +309,11 @@ public class Panel extends JPanel implements BoardInterface {
     }
 
     private void endGame() throws InterruptedException {
+        // Arrêter les timers dès que le jeu se termine
+        timerplayer1.stop();
+        timerplayer2.stop();
+        gameIsOver = true;  // Ajoutez un indicateur de fin de partie
+
         int winner = GameLogic.getWinner(board);
         String winnerName = (winner == 1) ? "Joueur 1" : "Joueur 2";
         //winnerLabel.setText("Dernier gagnant: " + winnerName);  // Mettre à jour le label avec le nom du gagnant
@@ -340,18 +346,18 @@ public class Panel extends JPanel implements BoardInterface {
     private void showPlayerSetupDialog() throws InterruptedException {
         JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(this); // Récupérer la fenêtre parente
         JPanel panel = new JPanel(new GridLayout(0, 2));
-        JComboBox<String> player1Type = new JComboBox<>(new String[]{"Humain", "IA Classique", "IA Positionnelle", "IA Mobilité", "IA Mixte"});
-        JComboBox<String> player2Type = new JComboBox<>(new String[]{"Humain", "IA Classique", "IA Positionnelle", "IA Mobilité", "IA Mixte"});
+        JComboBox<String> player1Type = new JComboBox<>(new String[]{"Humain", "IA Classique", "IA Positionnelle","IA Absolue", "IA Mobilité", "IA Mixte", "IA Stabilité"});
+        JComboBox<String> player2Type = new JComboBox<>(new String[]{"Humain", "IA Classique", "IA Positionnelle","IA Absolue", "IA Mobilité", "IA Mixte", "IA Stabilité"});
         JSpinner player1Depth = new JSpinner(new SpinnerNumberModel(3, 1, 10, 1));
         JSpinner player2Depth = new JSpinner(new SpinnerNumberModel(3, 1, 10, 1));
         player1Depth.setEnabled(false);
         player2Depth.setEnabled(false);
 
         // Ajouter des écouteurs pour activer/désactiver les spinners
-        player1Type.addActionListener(e -> player1Depth.setEnabled("IA Classique".equals(player1Type.getSelectedItem()) || "IA Positionnelle".equals(player1Type.getSelectedItem()) ||
-                "IA Mobilité".equals(player1Type.getSelectedItem()) || "IA Mixte".equals(player1Type.getSelectedItem())));
-        player2Type.addActionListener(e -> player2Depth.setEnabled("IA Classique".equals(player2Type.getSelectedItem()) || "IA Positionnelle".equals(player2Type.getSelectedItem()) ||
-                "IA Mobilité".equals(player2Type.getSelectedItem()) || "IA Mixte".equals(player2Type.getSelectedItem())));
+        player1Type.addActionListener(e -> player1Depth.setEnabled("IA Classique".equals(player1Type.getSelectedItem()) || "IA Positionnelle".equals(player1Type.getSelectedItem()) || "IA Absolue".equals(player1Type.getSelectedItem()) ||
+                "IA Mobilité".equals(player1Type.getSelectedItem()) || "IA Mixte".equals(player1Type.getSelectedItem()) || "IA Stabilité".equals(player1Type.getSelectedItem())));
+        player2Type.addActionListener(e -> player2Depth.setEnabled("IA Classique".equals(player2Type.getSelectedItem()) || "IA Positionnelle".equals(player2Type.getSelectedItem()) || "IA Absolue".equals(player2Type.getSelectedItem()) ||
+                "IA Mobilité".equals(player2Type.getSelectedItem()) || "IA Mixte".equals(player2Type.getSelectedItem()) || "IA Stabilité".equals(player2Type.getSelectedItem())));
 
         panel.add(new JLabel("Choisir Joueur 1:"));
         panel.add(player1Type);
@@ -388,23 +394,35 @@ public class Panel extends JPanel implements BoardInterface {
                 return new AIPlayer(mark, maxDepth);
             case "IA Positionnelle":
                 return new AIpositionalPlayer(mark, maxDepth);
+            case "IA Absolue":
+                return new AIabsolutePlayer(mark, maxDepth);
             case "IA Mobilité":
                 return new AImobilitePlayer(mark, maxDepth);
             case "IA Mixte":
                 return new AImixtePlayer(mark, maxDepth);
+            case "IA Stabilité":
+                return new AIstabilityPlayer(mark, maxDepth);
             default:
                 return new Human_Player(mark);  // Default to human if something goes wrong
         }
     }
 
     private void updateTimerConsole(int playerNum) throws InterruptedException {
+        if (gameIsOver) {
+            timerplayer1.stop();
+            timerplayer2.stop();
+            return; // Sortir directement si le jeu est fini
+        }
+
         if (playerNum == 1) {
             if (timeLeftPlayer1 > 0) {
                 timeLeftPlayer1--;
                 if(timeLeftPlayer1 % 5 == 0){
                     System.out.println("Timer Joueur 1: " + formatTime(timeLeftPlayer1));
                 }
+                //System.out.println("le if " + (timeLeftPlayer1<=0) + " timeLeftPlayer1 " + timeLeftPlayer1);
                 if (timeLeftPlayer1 <= 0) {
+                    //System.out.println("Le temps est écoulé pour le Joueur 1, on call endGameDueToTime !");
                     timerplayer1.stop();
                     endGameDueToTime(1);
                 }
@@ -415,7 +433,9 @@ public class Panel extends JPanel implements BoardInterface {
                 if(timeLeftPlayer2 % 5 == 0){
                     System.out.println("Timer Joueur 2: " + formatTime(timeLeftPlayer2));
                 }
+                //System.out.println("le if " + (timeLeftPlayer1<=0) + " timeLeftPlayer1 " + timeLeftPlayer1);
                 if (timeLeftPlayer2 <= 0) {
+                    //System.out.println("Le temps est écoulé pour le Joueur 1, on call endGameDueToTime !");
                     timerplayer2.stop();
                     endGameDueToTime(2);
                 }
@@ -424,22 +444,30 @@ public class Panel extends JPanel implements BoardInterface {
     }
 
     private void endGameDueToTime(int losingPlayerNum) throws InterruptedException {
-        String winningPlayerName = (losingPlayerNum == 1) ? "Joueur 2" : "Joueur 1";
-        System.out.println("Le temps est écoulé ! " + winningPlayerName + " gagne par le temps.");
-        JOptionPane.showMessageDialog(this, "Le temps est écoulé ! " + winningPlayerName + " gagne par le temps.",
-                "Temps écoulé", JOptionPane.INFORMATION_MESSAGE);
-        int response = JOptionPane.showConfirmDialog(null, "Voulez-vous rejouer ?", "Partie terminée",
-                JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
-        if (response == JOptionPane.YES_OPTION) {
-            showPlayerSetupDialog();  // Afficher à nouveau le popup pour choisir les joueurs
-        } else {
-            System.out.println("Le jeu est terminé. Fermeture de l'application.");
-            System.exit(0);  // Quitter l'application
+        // Arrêter les timers pour éviter des appels multiples
+        timerplayer1.stop();
+        timerplayer2.stop();
+
+        // Vérifier si le jeu n'est pas déjà fini
+        if (!gameIsOver) {
+            String winningPlayerName = (losingPlayerNum == 1) ? "Joueur 2" : "Joueur 1";
+            System.out.println("Le temps est écoulé ! " + winningPlayerName + " gagne par le temps.");
+            JOptionPane.showMessageDialog(this, "Le temps est écoulé ! " + winningPlayerName + " gagne par le temps.",
+                    "Temps écoulé", JOptionPane.INFORMATION_MESSAGE);
+            int response = JOptionPane.showConfirmDialog(null, "Voulez-vous rejouer ?", "Partie terminée",
+                    JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
+            if (response == JOptionPane.YES_OPTION) {
+                showPlayerSetupDialog();  // Afficher à nouveau le popup pour choisir les joueurs
+            } else {
+                System.out.println("Le jeu est terminé. Fermeture de l'application.");
+                System.exit(0);  // Quitter l'application
+            }
+            resetBoard();
+            turn = 1;
+            updateBoardInfo();
+            repaint();
+            gameIsOver = true;  // Marquer le jeu comme terminé
         }
-        resetBoard();
-        turn = 1;
-        updateBoardInfo();
-        repaint();
     }
 
     private String formatTime(int timeInSeconds) {
