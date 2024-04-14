@@ -266,7 +266,7 @@ public class Panel extends JPanel implements BoardInterface {
         if (!GameLogic.hasAnyMoves(board, turn)) {
             System.out.println("Joueur " + turn + " ne peut pas jouer !");
             turn = (turn == 1) ? 2 : 1;  // Passer le tour à l'autre joueur
-            System.out.println("Turn : " + turn);
+            //System.out.println("Turn : " + turn);
             if (!GameLogic.hasAnyMoves(board, turn)) {
                 System.out.println("Aucun des deux joueurs ne peut jouer !");
                 endGame();// Terminer la partie si aucun des deux joueurs ne peut jouer
@@ -276,6 +276,7 @@ public class Panel extends JPanel implements BoardInterface {
         } else {
             updateBoardInfo();
             Player currentPlayer = (turn == 1) ? player1 : player2;
+            System.out.println("currentPlayer.getMark() : " + currentPlayer.getMark() + " turn : " + turn);
 
             if (currentPlayer.isUserPlayer()) {
                 awaitForClick = true; // Attendre un clic de l'utilisateur s'il s'agit d'un joueur humain
@@ -283,6 +284,7 @@ public class Panel extends JPanel implements BoardInterface {
                 //handleAI(currentPlayer); // Gérer le tour automatiquement s'il s'agit d'une IA
                 aiTimer = new Timer(500, e -> {
                     try {
+                        //System.out.println("currentPlayer.getMark() : " + currentPlayer.getMark() + " turn : " + turn);
                         handleAI(currentPlayer);
                     } catch (InterruptedException ex) {
                         ex.printStackTrace();
@@ -296,6 +298,7 @@ public class Panel extends JPanel implements BoardInterface {
 
     private void handleAI(Player ai) throws InterruptedException {
         Point aiPlayPoint = ai.play(board);
+        System.out.println(" ai.getMark() handleAI : " + ai.getMark());
         if (aiPlayPoint != null) {
             executeMove(aiPlayPoint.x, aiPlayPoint.y, ai);
         } else {
@@ -310,6 +313,10 @@ public class Panel extends JPanel implements BoardInterface {
     private void executeMove(int x, int y, Player player) throws InterruptedException {
         if (GameLogic.canPlay(board, player.getMark(), x, y)) {
             System.out.println("Joueur " + turn + " a joué dans la case : " + x + " , " + y);
+            System.out.println(" player.getMark() : " + player.getMark());
+            if(player.getMark()!=turn){
+                turn = (turn == 1) ? 2 : 1;
+            }
             board = GameLogic.getNewBoardAfterMove(board, x, y, player.getMark());
             turn = (turn == 1) ? 2 : 1;
             repaint();
