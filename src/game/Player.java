@@ -11,8 +11,6 @@ public abstract class Player {
 
     abstract public boolean isUserPlayer();
 
-    abstract public String playerName();
-
     abstract public Point play(int[][] board);
 
     public int getMark() {

@@ -15,11 +15,6 @@ public class Human_Player extends Player {
     }
 
     @Override
-    public String playerName() {
-        return "User" ;
-    }
-
-    @Override
     public Point play(int[][] board) {
         return null;
     }
