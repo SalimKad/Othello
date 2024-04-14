@@ -6,6 +6,8 @@ import java.util.ArrayList;
 
 public class AIPlayer extends Player {
     private final int maxDepth;
+    private int nodesGenerated = 0;
+    private ArrayList<Long> tempsDeCalculs = new ArrayList<>();
 
     public AIPlayer(int mark, int maxDepth) {
         super(mark);
@@ -24,9 +26,14 @@ public class AIPlayer extends Player {
 
     @Override
     public Point play(int[][] board) {
-        //System.out.println("AIPlayer play utilisé");
+        long startTime = System.currentTimeMillis();
         Point bestMove = findBestMove(board, myMark);
         System.out.println("AIPlayer a choisi : " + bestMove + " avec une évaluation de : " + (bestMove == null ? "Aucun mouvement" : evaluateBoard(board, myMark)));
+        long endTime = System.currentTimeMillis();
+        tempsDeCalculs.add(endTime - startTime);
+        System.out.println("Temps de calcul : " + (endTime - startTime) + " millisecondes");
+        System.out.println("Nombre de noeuds générés : " + nodesGenerated);
+        nodesGenerated = 0;
         return bestMove;
     }
 
@@ -51,6 +58,7 @@ public class AIPlayer extends Player {
         if (depth == maxDepth || GameLogic.isGameFinished(board)) {
             return evaluateBoard(board, myMark);
         }
+        nodesGenerated++;
 
         if (isMaximizing) {
             double maxEval = Double.NEGATIVE_INFINITY;
