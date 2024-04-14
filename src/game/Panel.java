@@ -22,6 +22,9 @@ public class Panel extends JPanel implements BoardInterface {
 
     JLabel title;
     JTextArea description;
+    String playerName1;
+    String playerName2;
+
     JLabel score1;
     JLabel score2;
 
@@ -91,9 +94,19 @@ public class Panel extends JPanel implements BoardInterface {
         description.setBackground(UIManager.getColor(rightbar));
 
         totscore1 = new JLabel("Total Score Joueur 1 : 0");
-        totscore1.setFont(new Font("Arial", Font.BOLD, 15));
+        totscore1.setFont(new Font("Arial", Font.BOLD, 12));
+        totscore1.setPreferredSize(new Dimension(400, 20)); // Taille fixe pour le label
+        totscore1.setAlignmentX(Component.CENTER_ALIGNMENT); // Pour centrer le label si BoxLayout est utilisé
+        Dimension labelSize = totscore1.getPreferredSize(); // Récupérer la taille préférée actuelle
+        totscore1.setMaximumSize(labelSize); // Fixer la taille maximale à la taille préférée
+
         totscore2 = new JLabel("Total Score Joueur 2 : 0");
-        totscore2.setFont(new Font("Arial", Font.BOLD, 15));
+        totscore2.setFont(new Font("Arial", Font.BOLD, 12));
+        totscore2.setPreferredSize(new Dimension(400, 20)); // Taille fixe pour le label
+        totscore2.setAlignmentX(Component.CENTER_ALIGNMENT); // Pour centrer le label si BoxLayout est utilisé
+        Dimension labelSize2 = totscore2.getPreferredSize(); // Récupérer la taille préférée actuelle
+        totscore2.setMaximumSize(labelSize2); // Fixer la taille maximale à la taille préférée
+
         EmptyBorder leftBorder = new EmptyBorder(0, 20, 0, 0);
         EmptyBorder descrBorder = new EmptyBorder(0, 0, 20, 0);
 
@@ -315,8 +328,7 @@ public class Panel extends JPanel implements BoardInterface {
         gameIsOver = true;  // Ajoutez un indicateur de fin de partie
 
         int winner = GameLogic.getWinner(board);
-        String winnerName = (winner == 1) ? "Joueur 1" : "Joueur 2";
-        //winnerLabel.setText("Dernier gagnant: " + winnerName);  // Mettre à jour le label avec le nom du gagnant
+        String winnerName = (winner == 1) ? playerName1 : playerName2;
         System.out.println("Joueur " + winner + " est le gagnant !");
         totalscore1 += GameLogic.getPlayerStoneCount(board, 1);
         totalscore2 += GameLogic.getPlayerStoneCount(board, 2);
@@ -344,6 +356,7 @@ public class Panel extends JPanel implements BoardInterface {
     }
 
     private void showPlayerSetupDialog() throws InterruptedException {
+        System.out.println("Nouvelle partie ! Affichage de la boîte de dialogue de configuration des joueurs...");
         JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(this); // Récupérer la fenêtre parente
         JPanel panel = new JPanel(new GridLayout(0, 2));
         JComboBox<String> player1Type = new JComboBox<>(new String[]{"Humain", "IA Classique", "IA Positionnelle","IA Absolue", "IA Mobilité", "IA Mixte", "IA Stabilité"});
@@ -391,21 +404,34 @@ public class Panel extends JPanel implements BoardInterface {
             case "Humain":
                 return new Human_Player(mark);
             case "IA Classique":
+                if (mark == 1) playerName1 = "IA Classique 1";
+                else playerName2 = "IA Classique 2";
                 return new AIPlayer(mark, maxDepth);
             case "IA Positionnelle":
+                if (mark == 1) playerName1 = "IA Positionnelle 1";
+                else playerName2 = "IA Positionnelle 2";
                 return new AIpositionalPlayer(mark, maxDepth);
             case "IA Absolue":
+                if (mark == 1) playerName1 = "IA Absolue 1";
+                else playerName2 = "IA Absolue 2";
                 return new AIabsolutePlayer(mark, maxDepth);
             case "IA Mobilité":
+                if (mark == 1) playerName1 = "IA Mobilité 1";
+                else playerName2 = "IA Mobilité 2";
                 return new AImobilitePlayer(mark, maxDepth);
             case "IA Mixte":
+                if (mark == 1) playerName1 = "IA Mixte 1";
+                else playerName2 = "IA Mixte 1";
                 return new AImixtePlayer(mark, maxDepth);
             case "IA Stabilité":
+                if (mark == 1) playerName1 = "IA Stabilité 1";
+                else playerName2 = "IA Stabilité 2";
                 return new AIstabilityPlayer(mark, maxDepth);
             default:
                 return new Human_Player(mark);  // Default to human if something goes wrong
         }
     }
+
 
     private void updateTimerConsole(int playerNum) throws InterruptedException {
         if (gameIsOver) {

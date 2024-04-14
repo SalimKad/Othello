@@ -20,11 +20,6 @@ public class AIPlayer extends Player {
     }
 
     @Override
-    public String playerName() {
-        return "AI Player";
-    }
-
-    @Override
     public Point play(int[][] board) {
         long startTime = System.currentTimeMillis();
         Point bestMove = findBestMove(board, myMark);
