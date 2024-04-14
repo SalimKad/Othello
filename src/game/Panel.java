@@ -169,7 +169,7 @@ public class Panel extends JPanel implements BoardInterface {
     public void handleClick(int i, int j) throws InterruptedException {
         //System.out.println("Clicked case "+i+","+j);
         if (awaitForClick && GameLogic.canPlay(board, turn, i, j)) {
-            System.out.println("Player " + turn + " played in case : " + i + " , " + j);
+            System.out.println("Joueur " + turn + " a joué dans la case : " + i + " , " + j);
             board = GameLogic.getNewBoardAfterMove(board, i, j, turn);
             repaint();
 
@@ -250,7 +250,7 @@ public class Panel extends JPanel implements BoardInterface {
         }
 
         if (!GameLogic.hasAnyMoves(board, turn)) {
-            System.out.println("Player " + turn + " can't play !");
+            System.out.println("Joueur " + turn + " ne peut pas jouer !");
             turn = (turn == 1) ? 2 : 1;  // Passer le tour à l'autre joueur
             System.out.println("Turn : " + turn);
             if (!GameLogic.hasAnyMoves(board, turn)) {
@@ -287,7 +287,7 @@ public class Panel extends JPanel implements BoardInterface {
         } else {
             System.out.println(ai + " AIPlayer n'a pas de mouvement valide.");
             turn = (turn == 1) ? 2 : 1; // Passer le tour à l'adversaire
-            System.out.println("Turn : " + turn);
+            System.out.println("Tour : " + turn);
 
             manageTurn(); // Continuer avec le prochain tour
         }
@@ -295,7 +295,7 @@ public class Panel extends JPanel implements BoardInterface {
 
     private void executeMove(int x, int y, Player player) throws InterruptedException {
         if (GameLogic.canPlay(board, player.getMark(), x, y)) {
-            System.out.println("Player " + turn + " played in case : " + x + " , " + y);
+            System.out.println("Joueur " + turn + " a joué dans la case : " + x + " , " + y);
             board = GameLogic.getNewBoardAfterMove(board, x, y, player.getMark());
             turn = (turn == 1) ? 2 : 1;
             repaint();
@@ -303,15 +303,15 @@ public class Panel extends JPanel implements BoardInterface {
             //Thread.sleep(500); // Attendre pour visualisation
             manageTurn();
         } else {
-            System.err.println("Invalid Move by AI");
+            System.err.println("Mouvement invalide par l'IA");
         }
     }
 
     private void endGame() throws InterruptedException {
         int winner = GameLogic.getWinner(board);
-        String winnerName = (winner == 1) ? "Player1" : "Player2";
+        String winnerName = (winner == 1) ? "Joueur 1" : "Joueur 2";
         //winnerLabel.setText("Dernier gagnant: " + winnerName);  // Mettre à jour le label avec le nom du gagnant
-        System.out.println("Player " + winner + " is the winner!");
+        System.out.println("Joueur " + winner + " est le gagnant !");
         totalscore1 += GameLogic.getPlayerStoneCount(board, 1);
         totalscore2 += GameLogic.getPlayerStoneCount(board, 2);
 
@@ -375,7 +375,7 @@ public class Panel extends JPanel implements BoardInterface {
             repaint();
             manageTurn();
         } else {
-            System.out.println("Game setup was cancelled.");
+            System.out.println("La configuration du jeu a été annulée.");
             System.exit(0);  // Quitter l'application
         }
     }
