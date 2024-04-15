@@ -23,11 +23,13 @@ public class AIPlayer extends Player {
     public Point play(int[][] board) {
         long startTime = System.currentTimeMillis();
         Point bestMove = findBestMove(board, myMark);
-        System.out.println("AIPlayer a choisi : " + bestMove + " avec une évaluation de : " + (bestMove == null ? "Aucun mouvement" : evaluateBoard(board, myMark)));
+        //System.out.println("AIPlayer a choisi : " + bestMove + " avec une évaluation de : " + (bestMove == null ? "Aucun mouvement" : evaluateBoard(board, myMark)));
         long endTime = System.currentTimeMillis();
         tempsDeCalculs.add(endTime - startTime);
+        //System.out.println(endTime - startTime);
         System.out.println("Temps de calcul : " + (endTime - startTime) + " millisecondes");
         System.out.println("Nombre de noeuds générés : " + nodesGenerated);
+        //System.out.println(nodesGenerated);
         nodesGenerated = 0;
         return bestMove;
     }

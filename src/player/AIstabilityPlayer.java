@@ -34,24 +34,72 @@ public class AIstabilityPlayer extends AIPlayer {
             }
         }
 
-        // Score is the difference in the number of stable discs
+        // Le score est la différence entre le nombre de disques stables du joueur et de son adversaire
         return stableCount - opponentStableCount;
     }
 
     private boolean isStable(int[][] board, int x, int y, int player) {
-        // Stability is complex to compute, this is a simplified version
-        // We consider a disc stable if it's surrounded by discs of the same color
-        int[] dx = {-1, 0, 1, 0, -1, -1, 1, 1};
-        int[] dy = {0, -1, 0, 1, -1, 1, -1, 1};
-        for (int dir = 0; dir < dx.length; dir++) {
-            int nx = x + dx[dir];
-            int ny = y + dy[dir];
-            if (nx >= 0 && nx < board.length && ny >= 0 && ny < board[0].length) {
-                if (board[nx][ny] != player) {
-                    return false;
+        // Corners
+        if ((x == 0 || x == board.length - 1) && (y == 0 || y == board[x].length - 1)) {
+            return true;
+        }
+
+        boolean stableInAllDirections = true;
+
+        int[] directionsX = {-1, -1, -1, 0, 1, 1, 1, 0};
+        int[] directionsY = {-1, 0, 1, 1, 1, 0, -1, -1};
+
+        for (int i = 0; i < directionsX.length; i++) {
+            int dirX = directionsX[i];
+            int dirY = directionsY[i];
+            boolean lineIsStable = false;
+
+            int currentX = x + dirX;
+            int currentY = y + dirY;
+
+            while (currentX >= 0 && currentX < board.length && currentY >= 0 && currentY < board[currentX].length) {
+                if (board[currentX][currentY] != player) {
+                    break;
                 }
+                if (isCorner(board, currentX, currentY) || (isEdge(board,currentX, currentY) && isEdgeStable(board, currentX, currentY, dirX, dirY, player))) {
+                    lineIsStable = true;
+                    break;
+                }
+                currentX += dirX;
+                currentY += dirY;
+            }
+
+            if (!lineIsStable) {
+                stableInAllDirections = false;
+                break;
             }
         }
-        return true;
+
+        return stableInAllDirections;
     }
+
+    private boolean isCorner(int[][] board,int x, int y) {
+        return (x == 0 || x == board.length - 1) && (y == 0 || y == board[x].length - 1);
+    }
+
+    private boolean isEdge(int[][] board,int x, int y) {
+        return x == 0 || x == board.length - 1 || y == 0 || y == board[x].length - 1;
+    }
+
+    private boolean isEdgeStable(int[][] board, int x, int y, int dirX, int dirY, int player) {
+        // Check the stability of the edge recursively
+        while (x >= 0 && x < board.length && y >= 0 && y < board[x].length) {
+            if (board[x][y] != player) {
+                return false;
+            }
+            if (isCorner(board,x, y)) {
+                return true;
+            }
+            x += dirX;
+            y += dirY;
+        }
+        return false;
+    }
+
+
 }
