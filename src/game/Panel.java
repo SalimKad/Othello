@@ -1,14 +1,13 @@
 package game;
 
-import player.AIPlayer;
-import player.AIpositionalPlayer;
-import player.AImobilitePlayer;
-import player.AImixtePlayer;
-import player.Human_Player;
+import player.*;
 
 import javax.swing.*;
 import javax.swing.border.*;
 import java.awt.*;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -19,11 +18,16 @@ public class Panel extends JPanel implements BoardInterface {
     int[][] board;
     Cell[][] cells;
 
+    boolean gameIsOver = false;
+
     int turn = 1; //noir
     Color boardColor = new Color(201, 193, 253); //violet clair
 
     JLabel title;
     JTextArea description;
+    String playerName1;
+    String playerName2;
+
     JLabel score1;
     JLabel score2;
 
@@ -39,14 +43,17 @@ public class Panel extends JPanel implements BoardInterface {
 
     Timer timerplayer1;
     Timer timerplayer2;
-    int timeLeftPlayer1 = 30;  // En secondes
-    int timeLeftPlayer2 = 30;  // En secondes
+    int timeLeftPlayer1;  // En secondes
+    int timeLeftPlayer2;  // En secondes
     private long startTimePlayer1;
     private long startTimePlayer2;
 
 
     Player player1;
     Player player2;
+
+    //private ArrayList<Long> calculTemps = new ArrayList<>();
+    //private ArrayList<Integer> noeudsGeneres = new ArrayList<>();
 
     public Panel() {
         setLayout(new BorderLayout());
@@ -93,9 +100,19 @@ public class Panel extends JPanel implements BoardInterface {
         description.setBackground(UIManager.getColor(rightbar));
 
         totscore1 = new JLabel("Total Score Joueur 1 : 0");
-        totscore1.setFont(new Font("Arial", Font.BOLD, 15));
+        totscore1.setFont(new Font("Arial", Font.BOLD, 12));
+        totscore1.setPreferredSize(new Dimension(400, 20)); // Taille fixe pour le label
+        totscore1.setAlignmentX(Component.CENTER_ALIGNMENT); // Pour centrer le label si BoxLayout est utilisé
+        Dimension labelSize = totscore1.getPreferredSize(); // Récupérer la taille préférée actuelle
+        totscore1.setMaximumSize(labelSize); // Fixer la taille maximale à la taille préférée
+
         totscore2 = new JLabel("Total Score Joueur 2 : 0");
-        totscore2.setFont(new Font("Arial", Font.BOLD, 15));
+        totscore2.setFont(new Font("Arial", Font.BOLD, 12));
+        totscore2.setPreferredSize(new Dimension(400, 20)); // Taille fixe pour le label
+        totscore2.setAlignmentX(Component.CENTER_ALIGNMENT); // Pour centrer le label si BoxLayout est utilisé
+        Dimension labelSize2 = totscore2.getPreferredSize(); // Récupérer la taille préférée actuelle
+        totscore2.setMaximumSize(labelSize2); // Fixer la taille maximale à la taille préférée
+
         EmptyBorder leftBorder = new EmptyBorder(0, 20, 0, 0);
         EmptyBorder descrBorder = new EmptyBorder(0, 0, 20, 0);
 
@@ -152,6 +169,9 @@ public class Panel extends JPanel implements BoardInterface {
         setBoardValue(3, 4, 1); //noir
         setBoardValue(4, 3, 1);
 
+        timeLeftPlayer1 = 100;
+        timeLeftPlayer2 = 100;
+        gameIsOver = false;  // S'assurer que le jeu est marqué comme non terminé
     }
 
 
@@ -167,9 +187,9 @@ public class Panel extends JPanel implements BoardInterface {
 
     @Override
     public void handleClick(int i, int j) throws InterruptedException {
-        //System.out.println("Clicked case "+i+","+j);
+        ////System.out.println("Clicked case "+i+","+j);
         if (awaitForClick && GameLogic.canPlay(board, turn, i, j)) {
-            System.out.println("Player " + turn + " played in case : " + i + " , " + j);
+            System.out.println("Joueur " + turn + " a joué dans la case : " + i + " , " + j);
             board = GameLogic.getNewBoardAfterMove(board, i, j, turn);
             repaint();
 
@@ -180,14 +200,14 @@ public class Panel extends JPanel implements BoardInterface {
 
             awaitForClick = false;
 
-            long endTime = System.currentTimeMillis();
+            /*long endTime = System.currentTimeMillis();
             if (turn == 1) {
                 timeLeftPlayer1 -= (int) ((endTime - startTimePlayer1) / 1000); // Convertir en secondes
                 System.out.println("Timer Joueur 1: " + formatTime(timeLeftPlayer1));
             } else {
                 timeLeftPlayer2 -= (int) ((endTime - startTimePlayer2) / 1000); // Convertir en secondes
                 System.out.println("Timer Joueur 2: " + formatTime(timeLeftPlayer2));
-            }
+            }*/
 
             // Gérer le timer dans l'EDT
             SwingUtilities.invokeLater(() -> {
@@ -250,9 +270,9 @@ public class Panel extends JPanel implements BoardInterface {
         }
 
         if (!GameLogic.hasAnyMoves(board, turn)) {
-            System.out.println("Player " + turn + " can't play !");
+            System.out.println("Joueur " + turn + " ne peut pas jouer !");
             turn = (turn == 1) ? 2 : 1;  // Passer le tour à l'autre joueur
-            System.out.println("Turn : " + turn);
+            //System.out.println("Turn : " + turn);
             if (!GameLogic.hasAnyMoves(board, turn)) {
                 System.out.println("Aucun des deux joueurs ne peut jouer !");
                 endGame();// Terminer la partie si aucun des deux joueurs ne peut jouer
@@ -282,12 +302,13 @@ public class Panel extends JPanel implements BoardInterface {
 
     private void handleAI(Player ai) throws InterruptedException {
         Point aiPlayPoint = ai.play(board);
+        //System.out.println(" ai.getMark() handleAI : " + ai.getMark());
         if (aiPlayPoint != null) {
             executeMove(aiPlayPoint.x, aiPlayPoint.y, ai);
         } else {
             System.out.println(ai + " AIPlayer n'a pas de mouvement valide.");
             turn = (turn == 1) ? 2 : 1; // Passer le tour à l'adversaire
-            System.out.println("Turn : " + turn);
+            System.out.println("Tour : " + turn);
 
             manageTurn(); // Continuer avec le prochain tour
         }
@@ -295,23 +316,29 @@ public class Panel extends JPanel implements BoardInterface {
 
     private void executeMove(int x, int y, Player player) throws InterruptedException {
         if (GameLogic.canPlay(board, player.getMark(), x, y)) {
-            System.out.println("Player " + turn + " played in case : " + x + " , " + y);
+            System.out.println("Joueur " + turn + " a joué dans la case : " + x + " , " + y);
+            if(player.getMark()!=turn){
+                turn = (turn == 1) ? 2 : 1;
+            }
             board = GameLogic.getNewBoardAfterMove(board, x, y, player.getMark());
             turn = (turn == 1) ? 2 : 1;
             repaint();
             updateBoardInfo();
-            //Thread.sleep(500); // Attendre pour visualisation
             manageTurn();
         } else {
-            System.err.println("Invalid Move by AI");
+            System.err.println("Mouvement invalide par l'IA");
         }
     }
 
     private void endGame() throws InterruptedException {
+        // Arrêter les timers dès que le jeu se termine
+        timerplayer1.stop();
+        timerplayer2.stop();
+        gameIsOver = true;  // Ajoutez un indicateur de fin de partie
+
         int winner = GameLogic.getWinner(board);
-        String winnerName = (winner == 1) ? "Player1" : "Player2";
-        //winnerLabel.setText("Dernier gagnant: " + winnerName);  // Mettre à jour le label avec le nom du gagnant
-        System.out.println("Player " + winner + " is the winner!");
+        String winnerName = (winner == 1) ? playerName1 : playerName2;
+        System.out.println(winnerName + " est le gagnant !");
         totalscore1 += GameLogic.getPlayerStoneCount(board, 1);
         totalscore2 += GameLogic.getPlayerStoneCount(board, 2);
 
@@ -335,23 +362,25 @@ public class Panel extends JPanel implements BoardInterface {
         turn = 1;
         updateBoardInfo();
         repaint();
+        //writeStatsToFile("stats.txt");
     }
 
     private void showPlayerSetupDialog() throws InterruptedException {
+        System.out.println("Nouvelle partie ! Affichage de la boîte de dialogue de configuration des joueurs...");
         JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(this); // Récupérer la fenêtre parente
         JPanel panel = new JPanel(new GridLayout(0, 2));
-        JComboBox<String> player1Type = new JComboBox<>(new String[]{"Humain", "IA Classique", "IA Positionnelle", "IA Mobilité", "IA Mixte"});
-        JComboBox<String> player2Type = new JComboBox<>(new String[]{"Humain", "IA Classique", "IA Positionnelle", "IA Mobilité", "IA Mixte"});
+        JComboBox<String> player1Type = new JComboBox<>(new String[]{"Humain", "IA Classique", "IA Positionnelle","IA Absolue", "IA Mobilité", "IA Mixte", "IA Stabilité"});
+        JComboBox<String> player2Type = new JComboBox<>(new String[]{"Humain", "IA Classique", "IA Positionnelle","IA Absolue", "IA Mobilité", "IA Mixte", "IA Stabilité"});
         JSpinner player1Depth = new JSpinner(new SpinnerNumberModel(3, 1, 10, 1));
         JSpinner player2Depth = new JSpinner(new SpinnerNumberModel(3, 1, 10, 1));
         player1Depth.setEnabled(false);
         player2Depth.setEnabled(false);
 
         // Ajouter des écouteurs pour activer/désactiver les spinners
-        player1Type.addActionListener(e -> player1Depth.setEnabled("IA Classique".equals(player1Type.getSelectedItem()) || "IA Positionnelle".equals(player1Type.getSelectedItem()) ||
-                "IA Mobilité".equals(player1Type.getSelectedItem()) || "IA Mixte".equals(player1Type.getSelectedItem())));
-        player2Type.addActionListener(e -> player2Depth.setEnabled("IA Classique".equals(player2Type.getSelectedItem()) || "IA Positionnelle".equals(player2Type.getSelectedItem()) ||
-                "IA Mobilité".equals(player2Type.getSelectedItem()) || "IA Mixte".equals(player2Type.getSelectedItem())));
+        player1Type.addActionListener(e -> player1Depth.setEnabled("IA Classique".equals(player1Type.getSelectedItem()) || "IA Positionnelle".equals(player1Type.getSelectedItem()) || "IA Absolue".equals(player1Type.getSelectedItem()) ||
+                "IA Mobilité".equals(player1Type.getSelectedItem()) || "IA Mixte".equals(player1Type.getSelectedItem()) || "IA Stabilité".equals(player1Type.getSelectedItem())));
+        player2Type.addActionListener(e -> player2Depth.setEnabled("IA Classique".equals(player2Type.getSelectedItem()) || "IA Positionnelle".equals(player2Type.getSelectedItem()) || "IA Absolue".equals(player2Type.getSelectedItem()) ||
+                "IA Mobilité".equals(player2Type.getSelectedItem()) || "IA Mixte".equals(player2Type.getSelectedItem()) || "IA Stabilité".equals(player2Type.getSelectedItem())));
 
         panel.add(new JLabel("Choisir Joueur 1:"));
         panel.add(player1Type);
@@ -375,7 +404,7 @@ public class Panel extends JPanel implements BoardInterface {
             repaint();
             manageTurn();
         } else {
-            System.out.println("Game setup was cancelled.");
+            System.out.println("La configuration du jeu a été annulée.");
             System.exit(0);  // Quitter l'application
         }
     }
@@ -385,26 +414,51 @@ public class Panel extends JPanel implements BoardInterface {
             case "Humain":
                 return new Human_Player(mark);
             case "IA Classique":
+                if (mark == 1) playerName1 = "IA Classique 1";
+                else playerName2 = "IA Classique 2";
                 return new AIPlayer(mark, maxDepth);
             case "IA Positionnelle":
+                if (mark == 1) playerName1 = "IA Positionnelle 1";
+                else playerName2 = "IA Positionnelle 2";
                 return new AIpositionalPlayer(mark, maxDepth);
+            case "IA Absolue":
+                if (mark == 1) playerName1 = "IA Absolue 1";
+                else playerName2 = "IA Absolue 2";
+                return new AIabsolutePlayer(mark, maxDepth);
             case "IA Mobilité":
+                if (mark == 1) playerName1 = "IA Mobilité 1";
+                else playerName2 = "IA Mobilité 2";
                 return new AImobilitePlayer(mark, maxDepth);
             case "IA Mixte":
+                if (mark == 1) playerName1 = "IA Mixte 1";
+                else playerName2 = "IA Mixte 1";
                 return new AImixtePlayer(mark, maxDepth);
+            case "IA Stabilité":
+                if (mark == 1) playerName1 = "IA Stabilité 1";
+                else playerName2 = "IA Stabilité 2";
+                return new AIstabilityPlayer(mark, maxDepth);
             default:
                 return new Human_Player(mark);  // Default to human if something goes wrong
         }
     }
 
+
     private void updateTimerConsole(int playerNum) throws InterruptedException {
+        if (gameIsOver) {
+            timerplayer1.stop();
+            timerplayer2.stop();
+            return; // Sortir directement si le jeu est fini
+        }
+
         if (playerNum == 1) {
             if (timeLeftPlayer1 > 0) {
                 timeLeftPlayer1--;
                 if(timeLeftPlayer1 % 5 == 0){
                     System.out.println("Timer Joueur 1: " + formatTime(timeLeftPlayer1));
                 }
+                //System.out.println("le if " + (timeLeftPlayer1<=0) + " timeLeftPlayer1 " + timeLeftPlayer1);
                 if (timeLeftPlayer1 <= 0) {
+                    //System.out.println("Le temps est écoulé pour le Joueur 1, on call endGameDueToTime !");
                     timerplayer1.stop();
                     endGameDueToTime(1);
                 }
@@ -415,7 +469,9 @@ public class Panel extends JPanel implements BoardInterface {
                 if(timeLeftPlayer2 % 5 == 0){
                     System.out.println("Timer Joueur 2: " + formatTime(timeLeftPlayer2));
                 }
+                //System.out.println("le if " + (timeLeftPlayer1<=0) + " timeLeftPlayer1 " + timeLeftPlayer1);
                 if (timeLeftPlayer2 <= 0) {
+                    //System.out.println("Le temps est écoulé pour le Joueur 1, on call endGameDueToTime !");
                     timerplayer2.stop();
                     endGameDueToTime(2);
                 }
@@ -424,22 +480,30 @@ public class Panel extends JPanel implements BoardInterface {
     }
 
     private void endGameDueToTime(int losingPlayerNum) throws InterruptedException {
-        String winningPlayerName = (losingPlayerNum == 1) ? "Joueur 2" : "Joueur 1";
-        System.out.println("Le temps est écoulé ! " + winningPlayerName + " gagne par le temps.");
-        JOptionPane.showMessageDialog(this, "Le temps est écoulé ! " + winningPlayerName + " gagne par le temps.",
-                "Temps écoulé", JOptionPane.INFORMATION_MESSAGE);
-        int response = JOptionPane.showConfirmDialog(null, "Voulez-vous rejouer ?", "Partie terminée",
-                JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
-        if (response == JOptionPane.YES_OPTION) {
-            showPlayerSetupDialog();  // Afficher à nouveau le popup pour choisir les joueurs
-        } else {
-            System.out.println("Le jeu est terminé. Fermeture de l'application.");
-            System.exit(0);  // Quitter l'application
+        // Arrêter les timers pour éviter des appels multiples
+        timerplayer1.stop();
+        timerplayer2.stop();
+
+        // Vérifier si le jeu n'est pas déjà fini
+        if (!gameIsOver) {
+            String winningPlayerName = (losingPlayerNum == 1) ? playerName2 : playerName1;
+            System.out.println("Le temps est écoulé ! " + winningPlayerName + " gagne par le temps.");
+            JOptionPane.showMessageDialog(this, "Le temps est écoulé ! " + winningPlayerName + " gagne par le temps.",
+                    "Temps écoulé", JOptionPane.INFORMATION_MESSAGE);
+            int response = JOptionPane.showConfirmDialog(null, "Voulez-vous rejouer ?", "Partie terminée",
+                    JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
+            if (response == JOptionPane.YES_OPTION) {
+                showPlayerSetupDialog();  // Afficher à nouveau le popup pour choisir les joueurs
+            } else {
+                System.out.println("Le jeu est terminé. Fermeture de l'application.");
+                System.exit(0);  // Quitter l'application
+            }
+            resetBoard();
+            turn = 1;
+            updateBoardInfo();
+            repaint();
+            gameIsOver = true;  // Marquer le jeu comme terminé
         }
-        resetBoard();
-        turn = 1;
-        updateBoardInfo();
-        repaint();
     }
 
     private String formatTime(int timeInSeconds) {
@@ -447,5 +511,25 @@ public class Panel extends JPanel implements BoardInterface {
         int seconds = timeInSeconds % 60;
         return String.format("%02d:%02d", minutes, seconds);
     }
+
+    /*public void setCalculTemps(ArrayList<Long> calculTemps) {
+        this.calculTemps = calculTemps;
+    }
+
+    public void setNoeudsGeneres(ArrayList<Integer> noeudsGeneres) {
+        this.noeudsGeneres = noeudsGeneres;
+    }
+
+    public void writeStatsToFile(String filename) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename))) {
+            for (int i = 0; i < calculTemps.size(); i++) {
+                writer.write("Temps de calcul: " + calculTemps.get(i) + " ms, ");
+                writer.write("Nombre de noeuds générés: " + noeudsGeneres.get(i));
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }*/
 
 }

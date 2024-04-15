@@ -230,7 +230,7 @@ public class GameLogic {
             newboard = updateCaseColor(newboard, x, y, playerColor);
         }
         else {
-            System.out.println("Invalid move");
+            System.out.println("Mouvement invalide");
         }
 
         return newboard;
