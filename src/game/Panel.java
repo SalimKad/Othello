@@ -5,6 +5,9 @@ import player.*;
 import javax.swing.*;
 import javax.swing.border.*;
 import java.awt.*;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -48,6 +51,9 @@ public class Panel extends JPanel implements BoardInterface {
 
     Player player1;
     Player player2;
+
+    //private ArrayList<Long> calculTemps = new ArrayList<>();
+    //private ArrayList<Integer> noeudsGeneres = new ArrayList<>();
 
     public Panel() {
         setLayout(new BorderLayout());
@@ -163,8 +169,8 @@ public class Panel extends JPanel implements BoardInterface {
         setBoardValue(3, 4, 1); //noir
         setBoardValue(4, 3, 1);
 
-        timeLeftPlayer1 = 30;
-        timeLeftPlayer2 = 30;
+        timeLeftPlayer1 = 100;
+        timeLeftPlayer2 = 100;
         gameIsOver = false;  // S'assurer que le jeu est marqué comme non terminé
     }
 
@@ -181,7 +187,7 @@ public class Panel extends JPanel implements BoardInterface {
 
     @Override
     public void handleClick(int i, int j) throws InterruptedException {
-        //System.out.println("Clicked case "+i+","+j);
+        ////System.out.println("Clicked case "+i+","+j);
         if (awaitForClick && GameLogic.canPlay(board, turn, i, j)) {
             System.out.println("Joueur " + turn + " a joué dans la case : " + i + " , " + j);
             board = GameLogic.getNewBoardAfterMove(board, i, j, turn);
@@ -276,7 +282,6 @@ public class Panel extends JPanel implements BoardInterface {
         } else {
             updateBoardInfo();
             Player currentPlayer = (turn == 1) ? player1 : player2;
-            System.out.println("currentPlayer.getMark() : " + currentPlayer.getMark() + " turn : " + turn);
 
             if (currentPlayer.isUserPlayer()) {
                 awaitForClick = true; // Attendre un clic de l'utilisateur s'il s'agit d'un joueur humain
@@ -284,7 +289,6 @@ public class Panel extends JPanel implements BoardInterface {
                 //handleAI(currentPlayer); // Gérer le tour automatiquement s'il s'agit d'une IA
                 aiTimer = new Timer(500, e -> {
                     try {
-                        //System.out.println("currentPlayer.getMark() : " + currentPlayer.getMark() + " turn : " + turn);
                         handleAI(currentPlayer);
                     } catch (InterruptedException ex) {
                         ex.printStackTrace();
@@ -298,7 +302,7 @@ public class Panel extends JPanel implements BoardInterface {
 
     private void handleAI(Player ai) throws InterruptedException {
         Point aiPlayPoint = ai.play(board);
-        System.out.println(" ai.getMark() handleAI : " + ai.getMark());
+        //System.out.println(" ai.getMark() handleAI : " + ai.getMark());
         if (aiPlayPoint != null) {
             executeMove(aiPlayPoint.x, aiPlayPoint.y, ai);
         } else {
@@ -313,7 +317,6 @@ public class Panel extends JPanel implements BoardInterface {
     private void executeMove(int x, int y, Player player) throws InterruptedException {
         if (GameLogic.canPlay(board, player.getMark(), x, y)) {
             System.out.println("Joueur " + turn + " a joué dans la case : " + x + " , " + y);
-            System.out.println(" player.getMark() : " + player.getMark());
             if(player.getMark()!=turn){
                 turn = (turn == 1) ? 2 : 1;
             }
@@ -360,6 +363,7 @@ public class Panel extends JPanel implements BoardInterface {
         turn = 1;
         updateBoardInfo();
         repaint();
+        //writeStatsToFile("stats.txt");
     }
 
     private void showPlayerSetupDialog() throws InterruptedException {
@@ -508,5 +512,25 @@ public class Panel extends JPanel implements BoardInterface {
         int seconds = timeInSeconds % 60;
         return String.format("%02d:%02d", minutes, seconds);
     }
+
+    /*public void setCalculTemps(ArrayList<Long> calculTemps) {
+        this.calculTemps = calculTemps;
+    }
+
+    public void setNoeudsGeneres(ArrayList<Integer> noeudsGeneres) {
+        this.noeudsGeneres = noeudsGeneres;
+    }
+
+    public void writeStatsToFile(String filename) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename))) {
+            for (int i = 0; i < calculTemps.size(); i++) {
+                writer.write("Temps de calcul: " + calculTemps.get(i) + " ms, ");
+                writer.write("Nombre de noeuds générés: " + noeudsGeneres.get(i));
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }*/
 
 }
