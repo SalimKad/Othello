@@ -20,11 +20,6 @@ public class AIClassicPlayer extends Player {
     }
 
     @Override
-    public String playerName() {
-        return "Random Player";
-    }
-
-    @Override
     public Point play(int[][] board) {
         ArrayList<Point> myPossibleMoves = GameLogic.getAllPossibleMoves(board,myMark);
 
