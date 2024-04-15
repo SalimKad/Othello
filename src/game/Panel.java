@@ -324,7 +324,6 @@ public class Panel extends JPanel implements BoardInterface {
             turn = (turn == 1) ? 2 : 1;
             repaint();
             updateBoardInfo();
-            //Thread.sleep(500); // Attendre pour visualisation
             manageTurn();
         } else {
             System.err.println("Mouvement invalide par l'IA");
@@ -339,7 +338,7 @@ public class Panel extends JPanel implements BoardInterface {
 
         int winner = GameLogic.getWinner(board);
         String winnerName = (winner == 1) ? playerName1 : playerName2;
-        System.out.println("Joueur " + winner + " est le gagnant !");
+        System.out.println(winnerName + " est le gagnant !");
         totalscore1 += GameLogic.getPlayerStoneCount(board, 1);
         totalscore2 += GameLogic.getPlayerStoneCount(board, 2);
 
@@ -487,7 +486,7 @@ public class Panel extends JPanel implements BoardInterface {
 
         // Vérifier si le jeu n'est pas déjà fini
         if (!gameIsOver) {
-            String winningPlayerName = (losingPlayerNum == 1) ? "Joueur 2" : "Joueur 1";
+            String winningPlayerName = (losingPlayerNum == 1) ? playerName2 : playerName1;
             System.out.println("Le temps est écoulé ! " + winningPlayerName + " gagne par le temps.");
             JOptionPane.showMessageDialog(this, "Le temps est écoulé ! " + winningPlayerName + " gagne par le temps.",
                     "Temps écoulé", JOptionPane.INFORMATION_MESSAGE);
